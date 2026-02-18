@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MessageCircle, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
@@ -30,11 +30,24 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Get the correct redirect URL based on current domain
+  // Check if already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // Already logged in, redirect to app
+        router.push("/concept-cards");
+      } else {
+        setIsCheckingAuth(false);
+      }
+    };
+    checkSession();
+  }, [router, supabase]);
+
   const getRedirectUrl = () => {
-    // Use current window location, fallback to deployed domain
     const origin = typeof window !== 'undefined' 
       ? window.location.origin 
       : 'https://yallwall.com';
@@ -59,7 +72,6 @@ export default function LoginPage() {
       setError(error.message);
       setIsLoading(false);
     }
-    // Otherwise, user is redirected to Google
   };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -69,7 +81,6 @@ export default function LoginPage() {
 
     try {
       if (isSignUp) {
-        // Sign up
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -79,20 +90,15 @@ export default function LoginPage() {
         });
 
         if (error) throw error;
-        
-        // Show success message for sign up
         alert("Check your email to confirm your account!");
       } else {
-        // Sign in
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (error) throw error;
-        
-        // Redirect to main app on success
-        router.push("/");
+        router.push("/concept-cards");
         router.refresh();
       }
     } catch (err: any) {
@@ -102,6 +108,21 @@ export default function LoginPage() {
     }
   };
 
+  if (isCheckingAuth) {
+    return (
+      <div 
+        className={`min-h-screen flex flex-col items-center justify-center ${jakarta.variable} ${inter.variable}`}
+        style={{ 
+          fontFamily: "var(--font-inter), Inter, sans-serif",
+          background: `linear-gradient(180deg, ${COLORS.navy} 0%, #0A1520 100%)`,
+        }}
+      >
+        <div className="w-12 h-12 border-3 border-amber-400/30 border-t-amber-400 rounded-full animate-spin mb-4" />
+        <p className="text-white/50 text-sm">Checking session...</p>
+      </div>
+    );
+  }
+
   return (
     <div 
       className={`min-h-screen flex flex-col items-center justify-center px-6 py-12 ${jakarta.variable} ${inter.variable}`}
@@ -110,7 +131,6 @@ export default function LoginPage() {
         background: `linear-gradient(180deg, ${COLORS.navy} 0%, #0A1520 100%)`,
       }}
     >
-      {/* CSS Animations */}
       <style jsx global>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -124,7 +144,6 @@ export default function LoginPage() {
         .animate-delay-300 { animation-delay: 0.3s; }
       `}</style>
 
-      {/* Logo & Brand */}
       <div className="text-center mb-10 animate-fade-in-up">
         <div 
           className="w-20 h-20 rounded-2xl mx-auto mb-4 flex items-center justify-center"
@@ -146,7 +165,6 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Auth Card */}
       <div 
         className="w-full max-w-sm animate-fade-in-up animate-delay-100"
         style={{
@@ -159,14 +177,12 @@ export default function LoginPage() {
       >
         <div className="p-6 space-y-5">
           
-          {/* Error Message */}
           {error && (
             <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-200 text-sm text-center">
               {error}
             </div>
           )}
 
-          {/* Google Sign In - Primary */}
           <button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
@@ -176,7 +192,6 @@ export default function LoginPage() {
               color: '#333',
             }}
           >
-            {/* Google Logo SVG */}
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -186,20 +201,15 @@ export default function LoginPage() {
             Continue with Google
           </button>
 
-          {/* Divider */}
           <div className="relative flex items-center gap-4 py-2">
             <div className="flex-1 h-px bg-white/10" />
             <span className="text-white/30 text-sm font-medium">or</span>
             <div className="flex-1 h-px bg-white/10" />
           </div>
 
-          {/* Email/Password Form */}
           <form onSubmit={handleEmailAuth} className="space-y-4">
-            {/* Email Field */}
             <div className="space-y-1.5">
-              <label className="text-white/70 text-sm font-medium ml-1">
-                Email
-              </label>
+              <label className="text-white/70 text-sm font-medium ml-1">Email</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                 <input
@@ -213,11 +223,8 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Password Field */}
             <div className="space-y-1.5">
-              <label className="text-white/70 text-sm font-medium ml-1">
-                Password
-              </label>
+              <label className="text-white/70 text-sm font-medium ml-1">Password</label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                 <input
@@ -239,7 +246,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
@@ -257,7 +263,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Toggle Sign Up/Sign In */}
           <div className="text-center pt-2">
             <p className="text-white/50 text-sm">
               {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
@@ -272,7 +277,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Back to Home */}
       <button
         onClick={() => router.push("/")}
         className="mt-8 text-white/40 hover:text-white/70 text-sm transition-colors animate-fade-in-up animate-delay-200"
@@ -280,7 +284,6 @@ export default function LoginPage() {
         ← Back to home
       </button>
 
-      {/* Terms */}
       <p className="mt-6 text-white/30 text-xs text-center max-w-xs animate-fade-in-up animate-delay-300">
         By continuing, you agree to our{" "}
         <button className="text-white/50 hover:text-white/70 underline">Terms</button>

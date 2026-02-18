@@ -226,7 +226,9 @@ function ProfileDrawer({ isOpen, onClose, user, onSignOut, router }: {
 
   const handleNavigate = (path: string) => {
     onClose();
-    router.push(path);
+    setTimeout(() => {
+      window.location.href = path;
+    }, 100);
   };
 
   return (

@@ -255,7 +255,16 @@ function ProfileDrawer({ isOpen, onClose, user, onSignOut, router }: {
             <X className="w-5 h-5 text-white/60" />
           </button>
 
-          <div className="flex items-center gap-4 mt-10 mb-8">
+          {/* Logo */}
+          <div className="flex justify-center mt-4 mb-6">
+            <img 
+              src="/images/logo.png" 
+              alt="YallWall" 
+              className="w-12 h-12 object-contain"
+            />
+          </div>
+
+          <div className="flex items-center gap-4 mb-8">
             <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white notification-ring"
               style={{ backgroundColor: COLORS.amber }}>
               {user?.display_name?.[0] || user?.username?.[0] || "U"}
@@ -1551,11 +1560,18 @@ export default function ConceptCardsPage() {
               )}
             </button>
 
-            {/* Center: City Name - PERFECTLY CENTERED */}
+            {/* Center: Logo + City Name - PERFECTLY CENTERED */}
             <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
-              <h1 className="text-white font-bold text-lg tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
-                Cenla
-              </h1>
+              <div className="flex items-center gap-2">
+                <img 
+                  src="/images/logo.png" 
+                  alt="YallWall" 
+                  className="w-8 h-8 object-contain"
+                />
+                <h1 className="text-white font-bold text-lg tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
+                  Cenla
+                </h1>
+              </div>
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 bg-green-400 rounded-full live-pulse" />
                 <span className="text-[10px] text-white/50">247 neighbors</span>

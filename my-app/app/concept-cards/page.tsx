@@ -175,6 +175,37 @@ function TipAnimation({ show, onComplete }: { show: boolean; onComplete: () => v
   );
 }
 
+// Toast Notification Component
+function Toast({ message, isVisible, onClose }: { message: string; isVisible: boolean; onClose: () => void }) {
+  useEffect(() => {
+    if (isVisible) {
+      const timer = setTimeout(onClose, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, onClose]);
+
+  if (!isVisible) return null;
+
+  return (
+    <div 
+      className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] animate-toast-slide"
+      style={{
+        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(37, 99, 235, 0.9) 100%)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        borderRadius: '9999px',
+        padding: '12px 24px',
+        boxShadow: '0 10px 40px -10px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255,255,255,0.1) inset',
+      }}
+    >
+      <div className="flex items-center gap-2">
+        <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+        <span className="text-white font-medium text-sm">{message}</span>
+      </div>
+    </div>
+  );
+}
+
 // Profile Drawer Component
 function ProfileDrawer({ isOpen, onClose, user, onSignOut }: { 
   isOpen: boolean; 
@@ -438,22 +469,18 @@ function ThreadModal({
                     <button
                       onClick={async () => {
                         if (!confirm('Delete this reply?')) return;
-                        console.log('Deleting reply:', reply.id);
-                        const { data, error } = await supabase
+                        const { error } = await supabase
                           .from('replies')
                           .delete()
-                          .eq('id', reply.id)
-                          .select();
-                        console.log('Delete result:', { data, error });
+                          .eq('id', reply.id);
                         if (error) {
-                          console.error('Delete error:', error);
-                          alert('Failed to delete reply: ' + error.message);
+                          alert('Failed to delete reply');
                         } else {
-                          console.log('Reply deleted successfully');
                           setReplies(replies.filter(r => r.id !== reply.id));
                         }
                       }}
-                      className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center rounded-full text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all z-10"
+                      className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center rounded-full text-white/30 hover:text-red-400 transition-all"
+                      style={{ touchAction: 'manipulation' }}
                       title="Delete reply"
                     >
                       <X className="w-3.5 h-3.5" />
@@ -835,25 +862,23 @@ function GlassMessageCard({
               <span>{message.likes}</span>
             </button>
             
-            <button 
-              onClick={(e) => { e.stopPropagation(); onThread(); }}
-              className="flex items-center gap-1 text-white/40 hover:text-blue-400 transition-colors text-xs"
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>{message.replyCount || 0}</span>
-            </button>
-            
-            {isOwnPost && (
-              <button 
-                onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
-                className="flex items-center gap-1 text-white/30 hover:text-red-400 transition-colors text-xs ml-2"
-              >
-                <span>Delete</span>
-              </button>
-            )}
           </div>
           
-          <span className="text-[10px] text-white/30">23h left</span>
+          {isOwnPost ? (
+            <button 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (confirm('Delete this post?')) {
+                  onDelete?.();
+                }
+              }}
+              className="text-[10px] text-white/30 hover:text-red-400 transition-colors"
+            >
+              Delete
+            </button>
+          ) : (
+            <span className="text-[10px] text-white/30">23h left</span>
+          )}
         </div>
 
         <div className="absolute bottom-1 right-3 text-[8px] text-white/20">
@@ -887,6 +912,15 @@ export default function ConceptCardsPage() {
   const [messagesLoading, setMessagesLoading] = useState(true);
   const [likedMessages, setLikedMessages] = useState<Set<string | number>>(new Set());
   const pendingLikes = useRef<Set<string | number>>(new Set());
+  
+  // Toast notification state
+  const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
+  const showToast = (message: string) => {
+    setToast({ message, visible: true });
+  };
+  const hideToast = () => {
+    setToast({ message: '', visible: false });
+  };
 
   // Auth checking - runs on mount and when auth state changes
   useEffect(() => {
@@ -1078,6 +1112,7 @@ export default function ConceptCardsPage() {
       alert('Failed to post reply: ' + error.message);
     } else {
       console.log('Reply created successfully:', data);
+      showToast('Reply sent!');
     }
   };
 
@@ -1334,7 +1369,7 @@ export default function ConceptCardsPage() {
       console.log('Message created:', data);
       setComposeText('');
       setShowInput(false);
-      // Message will appear via real-time subscription
+      showToast('Message posted to feed!');
     }
     
     setIsLoading(false);
@@ -1354,6 +1389,13 @@ export default function ConceptCardsPage() {
   return (
     <>
       <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+      
+      {/* Toast Notification */}
+      <Toast 
+        message={toast.message} 
+        isVisible={toast.visible} 
+        onClose={hideToast} 
+      />
       
       <div className={`min-h-screen flex flex-col ${jakarta.variable} ${inter.variable} overflow-x-hidden`} 
         style={{ 
@@ -1414,6 +1456,19 @@ export default function ConceptCardsPage() {
           }
           .animate-nav-slide-up {
             animation: nav-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          }
+          @keyframes toast-slide {
+            0% { 
+              opacity: 0;
+              transform: translateX(-50%) translateY(-20px) scale(0.95);
+            }
+            100% { 
+              opacity: 1;
+              transform: translateX(-50%) translateY(0) scale(1);
+            }
+          }
+          .animate-toast-slide {
+            animation: toast-slide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           }
 
           }

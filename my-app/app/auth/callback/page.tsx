@@ -6,51 +6,44 @@ import { createClientClient } from "@/lib/supabase";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
-  const supabase = createClientClient();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // The Supabase client automatically handles the OAuth callback
-        // We just need to check if we have a session
+        // Use the fixed client with disabled LockManager
+        const supabase = createClientClient();
+
+        // Wait for Supabase to process the OAuth callback from URL
+        await new Promise(r => setTimeout(r, 1500));
+        
+        // Check if session was established
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError) {
           console.error("Session error:", sessionError);
-          setError(sessionError.message);
-          setTimeout(() => router.push("/login?error=auth_failed"), 2000);
+          setError("Authentication error");
+          setTimeout(() => router.push("/login"), 2000);
           return;
         }
 
         if (session) {
-          console.log("Auth successful, redirecting to app...");
-          // Successfully authenticated, redirect to chat app
+          console.log("Auth successful!");
           router.push("/concept-cards");
           router.refresh();
         } else {
-          // No session yet, wait a bit and check again
-          // This handles the case where the callback is still processing
-          setTimeout(async () => {
-            const { data: { session: retrySession } } = await supabase.auth.getSession();
-            if (retrySession) {
-              router.push("/concept-cards");
-              router.refresh();
-            } else {
-              setError("Authentication failed. Please try again.");
-              setTimeout(() => router.push("/login"), 2000);
-            }
-          }, 1000);
+          setError("Authentication failed");
+          setTimeout(() => router.push("/login"), 2000);
         }
       } catch (err: any) {
         console.error("Auth callback error:", err);
-        setError(err.message || "Authentication failed");
-        setTimeout(() => router.push("/login?error=callback_failed"), 2000);
+        setError("Authentication failed");
+        setTimeout(() => router.push("/login"), 2000);
       }
     };
 
     handleAuthCallback();
-  }, [router, supabase]);
+  }, [router]);
 
   if (error) {
     return (
@@ -64,8 +57,7 @@ export default function AuthCallbackPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-          <p className="text-white/70 text-sm mb-2">Authentication Error</p>
-          <p className="text-white/50 text-xs">{error}</p>
+          <p className="text-white/70 text-sm mb-2">{error}</p>
           <p className="text-white/30 text-xs mt-4">Redirecting to login...</p>
         </div>
       </div>

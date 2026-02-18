@@ -3,8 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: 'export',
   distDir: 'dist',
-  // Remove assetPrefix to use absolute paths
-  // assetPrefix: '.',
+  // No assetPrefix - let Next.js use absolute paths
   images: {
     unoptimized: true,
   },

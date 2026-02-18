@@ -9,7 +9,22 @@ export const createClientClient = () => {
   
   clientInstance = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        // DISABLE Navigator LockManager completely!
+        // Use simple async function instead of browser locks
+        lock: async (name: string, acquireTimeout: number, fn: () => Promise<any>) => {
+          return await fn();
+        },
+        // Auto-refresh tokens
+        autoRefreshToken: true,
+        // Persist session
+        persistSession: true,
+        // Detect session in URL (for OAuth)
+        detectSessionInUrl: true,
+      },
+    }
   );
   
   return clientInstance;
@@ -19,7 +34,14 @@ export const createClientClient = () => {
 export const createServerClient = () => {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+      },
+    }
   );
 };
 

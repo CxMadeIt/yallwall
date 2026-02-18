@@ -193,14 +193,62 @@ CREATE TRIGGER on_like_change
 -- Function to auto-create profile on signup
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  base_username TEXT;
+  final_username TEXT;
+  counter INTEGER := 0;
 BEGIN
-  INSERT INTO profiles (id, username, display_name)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'username', 'user_' || substr(NEW.id::text, 1, 8)),
-    COALESCE(NEW.raw_user_meta_data->>'full_name', 'New User')
+  -- Generate base username from email (before @) or use 'user' as fallback
+  base_username := COALESCE(
+    NEW.raw_user_meta_data->>'username',
+    split_part(NEW.email, '@', 1),
+    'user'
   );
+  
+  -- Clean username: lowercase, alphanumeric only, no spaces
+  base_username := lower(regexp_replace(base_username, '[^a-zA-Z0-9]', '', 'g'));
+  
+  -- If empty after cleaning, use 'user'
+  IF length(base_username) = 0 THEN
+    base_username := 'user';
+  END IF;
+  
+  final_username := base_username;
+  
+  -- Check if username exists, if so add a number
+  WHILE EXISTS (SELECT 1 FROM profiles WHERE username = final_username) LOOP
+    counter := counter + 1;
+    final_username := base_username || counter::text;
+  END LOOP;
+  
+  -- Insert profile with safe values
+  INSERT INTO profiles (
+    id, 
+    username, 
+    display_name, 
+    avatar_url,
+    city,
+    state
+  ) VALUES (
+    NEW.id,
+    final_username,
+    COALESCE(
+      NEW.raw_user_meta_data->>'full_name',
+      NEW.raw_user_meta_data->>'name',
+      initcap(final_username)
+    ),
+    NEW.raw_user_meta_data->>'avatar_url',
+    'Austin',
+    'TX'
+  )
+  ON CONFLICT (id) DO NOTHING;  -- In case profile already exists
+  
   RETURN NEW;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Log error but don't prevent user creation
+    RAISE WARNING 'Error creating profile for user %: %', NEW.id, SQLERRM;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 

@@ -44,6 +44,20 @@ const NAV_ITEMS = [
   { id: "notifications", icon: Bell, label: "Notifications" },
 ];
 
+// Helper to format time - available globally
+const formatTime = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return date.toLocaleDateString();
+};
+
 // Sample messages
 const SAMPLE_MESSAGES = [
   { 
@@ -247,17 +261,71 @@ function ProfileDrawer({ isOpen, onClose, user, onSignOut }: {
 }
 
 // Thread View Modal - CENTERED, no auto keyboard
-function ThreadModal({ message, isOpen, onClose, onReply }: { 
+function ThreadModal({ 
+  message, 
+  isOpen, 
+  onClose, 
+  onReply,
+  currentUser,
+  supabase,
+}: { 
   message: typeof SAMPLE_MESSAGES[0] | null; 
   isOpen: boolean; 
   onClose: () => void;
   onReply: (text: string) => void;
+  currentUser: Profile | null;
+  supabase: any;
 }) {
   const [replyText, setReplyText] = useState("");
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [replies, setReplies] = useState<any[]>([]);
+  const [loadingReplies, setLoadingReplies] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Fetch replies when modal opens
+  useEffect(() => {
+    if (isOpen && message && supabase) {
+      const fetchReplies = async () => {
+        setLoadingReplies(true);
+        // Fetch replies without join (schema cache issue)
+        const { data: repliesData, error } = await supabase
+          .from('replies')
+          .select('*')
+          .eq('message_id', message.id)
+          .order('created_at', { ascending: true });
+        
+        if (repliesData && !error) {
+          // Get unique user IDs
+          const userIds = [...new Set(repliesData.map((r: any) => r.user_id))];
+          
+          // Fetch profiles separately
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, username, display_name, avatar_url')
+            .in('id', userIds);
+          
+          const profileMap = new Map();
+          profilesData?.forEach((p: any) => profileMap.set(p.id, p));
+          
+          const formatted = repliesData.map((reply: any) => {
+            const profile = profileMap.get(reply.user_id);
+            return {
+              id: reply.id,
+              user: profile?.display_name || profile?.username || 'Anonymous',
+              avatar: (profile?.display_name || profile?.username || 'U').substring(0, 2).toUpperCase(),
+              message: reply.content,
+              time: formatTime(reply.created_at),
+            };
+          });
+          setReplies(formatted);
+        }
+        setLoadingReplies(false);
+      };
+      fetchReplies();
+    }
+  }, [isOpen, message, supabase]);
   
   useEffect(() => {
     if (isOpen) {
@@ -266,6 +334,7 @@ function ThreadModal({ message, isOpen, onClose, onReply }: {
       setReplyText("");
     } else {
       setIsVisible(false);
+      setReplies([]);
     }
   }, [isOpen]);
 
@@ -343,16 +412,18 @@ function ThreadModal({ message, isOpen, onClose, onReply }: {
 
           {/* Replies */}
           <div className="p-5 space-y-4">
-            {message.replies?.length === 0 ? (
+            {loadingReplies ? (
+              <p className="text-center text-white/40 text-sm py-8">Loading replies...</p>
+            ) : replies.length === 0 ? (
               <p className="text-center text-white/40 text-sm py-8">No replies yet. Be the first!</p>
             ) : (
-              message.replies?.map((reply, idx) => (
-                <div key={idx} className="flex gap-3 animate-fade-in" style={{ animationDelay: `${idx * 50}ms` }}>
+              replies.map((reply, idx) => (
+                <div key={reply.id || idx} className="flex gap-3 animate-fade-in" style={{ animationDelay: `${idx * 50}ms` }}>
                   <div 
                     className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white/80 shrink-0"
                     style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
                   >
-                    {reply.user[0]}
+                    {reply.avatar}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-0.5">
@@ -394,20 +465,79 @@ function ThreadModal({ message, isOpen, onClose, onReply }: {
                   onChange={(e) => setReplyText(e.target.value)}
                   placeholder="Write a reply..."
                   className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-sm text-white placeholder-white/40 focus:outline-none focus:border-amber-400/50 transition-all"
-                  onKeyPress={(e) => {
+                  onKeyDown={async (e) => {
                     if (e.key === 'Enter' && replyText.trim()) {
-                      onReply(replyText);
+                      e.preventDefault();
+                      await onReply(replyText);
                       setReplyText("");
                       setShowReplyInput(false);
+                      // Refresh replies
+                      const { data: repliesData } = await supabase
+                        .from('replies')
+                        .select('*')
+                        .eq('message_id', message.id)
+                        .order('created_at', { ascending: true });
+                      
+                      if (repliesData) {
+                        const userIds = [...new Set(repliesData.map((r: any) => r.user_id))];
+                        const { data: profilesData } = await supabase
+                          .from('profiles')
+                          .select('id, username, display_name, avatar_url')
+                          .in('id', userIds);
+                        
+                        const profileMap = new Map();
+                        profilesData?.forEach((p: any) => profileMap.set(p.id, p));
+                        
+                        const formatted = repliesData.map((reply: any) => {
+                          const profile = profileMap.get(reply.user_id);
+                          return {
+                            id: reply.id,
+                            user: profile?.display_name || profile?.username || 'Anonymous',
+                            avatar: (profile?.display_name || profile?.username || 'U').substring(0, 2).toUpperCase(),
+                            message: reply.content,
+                            time: formatTime(reply.created_at),
+                          };
+                        });
+                        setReplies(formatted);
+                      }
                     }
                   }}
                 />
                 <button 
-                  onClick={() => {
+                  onClick={async () => {
                     if (replyText.trim()) {
-                      onReply(replyText);
+                      await onReply(replyText);
                       setReplyText("");
                       setShowReplyInput(false);
+                      // Refresh replies
+                      const { data: repliesData } = await supabase
+                        .from('replies')
+                        .select('*')
+                        .eq('message_id', message.id)
+                        .order('created_at', { ascending: true });
+                      
+                      if (repliesData) {
+                        const userIds = [...new Set(repliesData.map((r: any) => r.user_id))];
+                        const { data: profilesData } = await supabase
+                          .from('profiles')
+                          .select('id, username, display_name, avatar_url')
+                          .in('id', userIds);
+                        
+                        const profileMap = new Map();
+                        profilesData?.forEach((p: any) => profileMap.set(p.id, p));
+                        
+                        const formatted = repliesData.map((reply: any) => {
+                          const profile = profileMap.get(reply.user_id);
+                          return {
+                            id: reply.id,
+                            user: profile?.display_name || profile?.username || 'Anonymous',
+                            avatar: (profile?.display_name || profile?.username || 'U').substring(0, 2).toUpperCase(),
+                            message: reply.content,
+                            time: formatTime(reply.created_at),
+                          };
+                        });
+                        setReplies(formatted);
+                      }
                     }
                   }}
                   className="px-5 py-3 rounded-xl text-white font-semibold text-sm active:scale-95 transition-transform"
@@ -478,16 +608,29 @@ function GlassMessageCard({
     return (
       <div className="w-full animate-fade-in my-3" style={{ animationDelay: `${message.id * 50}ms` }}>
         <div 
-          className="p-4 hover-lift cursor-pointer transition-transform active:scale-[0.98]"
+          className="p-4 cursor-pointer transition-all duration-200 active:scale-[0.98] relative overflow-hidden"
           onClick={onThread}
           style={{
-            background: 'rgba(245, 166, 35, 0.12)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(245, 166, 35, 0.35)',
+            background: 'linear-gradient(135deg, rgba(245, 166, 35, 0.18) 0%, rgba(245, 166, 35, 0.08) 100%)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            border: '1px solid rgba(245, 166, 35, 0.4)',
             borderRadius: '20px',
-            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.15), 0 0 20px rgba(245, 166, 35, 0.08)',
+            boxShadow: `
+              0 8px 32px rgba(0, 0, 0, 0.3),
+              0 4px 16px rgba(245, 166, 35, 0.15),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.1)
+            `,
           }}
         >
+          {/* Top highlight for 3D effect */}
+          <div 
+            className="absolute inset-x-0 top-0 h-px rounded-t-[20px]"
+            style={{
+              background: 'linear-gradient(90deg, transparent, rgba(245, 166, 35, 0.6), transparent)',
+            }}
+          />
           <div className="flex items-start gap-3">
             <div 
               className="w-11 h-11 rounded-xl flex items-center justify-center text-base font-bold text-white shrink-0"
@@ -556,19 +699,32 @@ function GlassMessageCard({
         <span className="text-white font-bold text-xs">HIDE</span>
       </div>
 
-      {/* Glass Card */}
+      {/* Glass Card - 3D Liquid Glass Effect */}
       <div 
-        className="relative p-4 hover-lift cursor-pointer transition-transform duration-200 active:scale-[0.98]"
+        className="relative p-4 cursor-pointer transition-all duration-200 active:scale-[0.98] group"
         style={{ 
-          background: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
           borderRadius: '20px',
-          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.1)',
-          transform: `translateX(${swipeOffset}px)`,
+          boxShadow: `
+            0 8px 32px rgba(0, 0, 0, 0.3),
+            0 2px 8px rgba(0, 0, 0, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.1)
+          `,
+          transform: `translateX(${swipeOffset}px) translateY(0) rotateX(0deg)`,
         }}
         onClick={onThread}
       >
+        {/* Top highlight for 3D effect */}
+        <div 
+          className="absolute inset-x-0 top-0 h-px rounded-t-[20px]"
+          style={{
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+          }}
+        />
         {/* Header */}
         <div className="flex items-center gap-2.5 mb-2">
           <div 
@@ -675,52 +831,75 @@ export default function ConceptCardsPage() {
   useEffect(() => {
     setMounted(true);
     
-    // Check auth status immediately
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('Auth check - Session:', session?.user?.email);
-      
-      if (session) {
-        setIsAuthenticated(true);
-        // Fetch user profile (handle case where it might not exist yet)
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .maybeSingle(); // Use maybeSingle instead of single to not error if missing
+    // Check auth status with retry logic
+    const checkAuth = async (retries = 3) => {
+      for (let i = 0; i < retries; i++) {
+        try {
+          // Add a timeout to prevent the lock manager from hanging forever
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Auth check timeout')), 3000)
+          );
           
-        if (error) {
-          console.error('Error fetching profile:', error);
+          const sessionPromise = supabase.auth.getSession();
+          const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
+          
+          console.log('Auth check - Session:', session?.user?.email);
+          
+          if (session) {
+            setIsAuthenticated(true);
+            // Fetch user profile (handle case where it might not exist yet)
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .maybeSingle(); // Use maybeSingle instead of single to not error if missing
+              
+            if (error) {
+              console.error('Error fetching profile:', error);
+            }
+            
+            if (profile) {
+              console.log('Profile loaded:', (profile as any).username);
+              setUser(profile);
+            } else {
+              console.log('No profile found for user, creating basic one...');
+              // Create a temporary profile object so UI doesn't break
+              setUser({
+                id: session.user.id,
+                username: session.user.email?.split('@')[0] || 'user',
+                display_name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+                avatar_url: session.user.user_metadata?.avatar_url || null,
+                city: 'Austin',
+                state: 'TX',
+                lat: null,
+                lng: null,
+                tips_given: 0,
+                tips_received: 0,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              });
+            }
+          } else {
+            setIsAuthenticated(false);
+            setUser(null);
+          }
+          return; // Success, exit retry loop
+        } catch (error) {
+          console.error(`Auth check failed (attempt ${i + 1}/${retries}):`, error);
+          if (i === retries - 1) {
+            // Final attempt failed, treat as not authenticated but don't hang
+            setIsAuthenticated(false);
+            setUser(null);
+          } else {
+            // Wait before retry
+            await new Promise(r => setTimeout(r, 500));
+          }
         }
-        
-        if (profile) {
-          console.log('Profile loaded:', (profile as any).username);
-          setUser(profile);
-        } else {
-          console.log('No profile found for user, creating basic one...');
-          // Create a temporary profile object so UI doesn't break
-          setUser({
-            id: session.user.id,
-            username: session.user.email?.split('@')[0] || 'user',
-            display_name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-            avatar_url: session.user.user_metadata?.avatar_url || null,
-            city: 'Austin',
-            state: 'TX',
-            lat: null,
-            lng: null,
-            tips_given: 0,
-            tips_received: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
-        }
-      } else {
-        setIsAuthenticated(false);
-        setUser(null);
       }
     };
     
-    checkAuth();
+    // Delay auth check slightly to let any stuck locks clear
+    setTimeout(() => checkAuth(), 100);
     
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -777,6 +956,37 @@ export default function ConceptCardsPage() {
     setSelectedThread(null);
   };
 
+  const handleReply = async (text: string) => {
+    console.log('handleReply called with:', text);
+    console.log('selectedThread:', selectedThread?.id);
+    console.log('isAuthenticated:', isAuthenticated);
+    console.log('user?.id:', user?.id);
+    
+    if (!selectedThread || !isAuthenticated || !user?.id) {
+      alert('Please sign in to reply');
+      return;
+    }
+
+    console.log('Inserting reply...');
+    const { data, error } = await supabase
+      .from('replies')
+      .insert({
+        message_id: selectedThread.id,
+        user_id: user.id,
+        content: text,
+      } as any)
+      .select();
+
+    console.log('Insert result:', { data, error });
+
+    if (error) {
+      console.error('Error creating reply:', error);
+      alert('Failed to post reply: ' + error.message);
+    } else {
+      console.log('Reply created successfully:', data);
+    }
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setIsProfileOpen(false);
@@ -799,66 +1009,83 @@ export default function ConceptCardsPage() {
     }
   };
 
-  // Helper to format time - MUST be defined before use
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    return date.toLocaleDateString();
-  };
-
   // Fetch real messages from Supabase
   useEffect(() => {
-    const fetchMessages = async () => {
+    const fetchMessages = async (retries = 3) => {
       setMessagesLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('messages')
-          .select(`
-            *,
-            profiles:user_id (id, username, display_name, avatar_url)
-          ` as any)
-          .gt('expires_at', new Date().toISOString())
-          .order('created_at', { ascending: false })
-          .limit(50);
+      for (let i = 0; i < retries; i++) {
+        try {
+          // Add timeout to prevent lock manager hangs
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Messages fetch timeout')), 5000)
+          );
+          
+          // Fetch messages without the join (schema cache issue)
+          const fetchPromise = supabase
+            .from('messages')
+            .select('*')
+            .gt('expires_at', new Date().toISOString())
+            .order('created_at', { ascending: false })
+            .limit(50);
+          
+          const { data: messagesData, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
 
-        if (error) {
-          console.error('Error fetching messages:', error);
-          setMessages(SAMPLE_MESSAGES);
-        } else if (data && data.length > 0) {
-          const formattedMessages = data.map((msg: any) => ({
-            id: msg.id,
-            user: msg.profiles?.display_name || msg.profiles?.username || 'Anonymous',
-            avatar: (msg.profiles?.display_name || msg.profiles?.username || 'U').substring(0, 2).toUpperCase(),
-            message: msg.content,
-            time: formatTime(msg.created_at),
-            likes: msg.likes || 0,
-            tips: msg.tips || 0,
-            location: msg.location_name,
-            isHot: msg.is_hot,
-            isImportant: msg.is_important,
-            isBusiness: msg.is_business,
-            replies: [],
-          }));
-          setMessages(formattedMessages);
-        } else {
-          setMessages(SAMPLE_MESSAGES);
+          if (error) {
+            console.error('Error fetching messages:', error);
+            setMessages(SAMPLE_MESSAGES);
+          } else if (messagesData && messagesData.length > 0) {
+            // Get unique user IDs from messages
+            const userIds = [...new Set(messagesData.map((m: any) => m.user_id))];
+            
+            // Fetch profiles separately
+            const { data: profilesData } = await supabase
+              .from('profiles')
+              .select('id, username, display_name, avatar_url')
+              .in('id', userIds);
+            
+            // Create a map of user_id -> profile
+            const profileMap = new Map();
+            profilesData?.forEach((p: any) => profileMap.set(p.id, p));
+            
+            const formattedMessages = messagesData.map((msg: any) => {
+              const profile = profileMap.get(msg.user_id);
+              return {
+                id: msg.id,
+                user: profile?.display_name || profile?.username || 'Anonymous',
+                avatar: (profile?.display_name || profile?.username || 'U').substring(0, 2).toUpperCase(),
+                message: msg.content,
+                time: formatTime(msg.created_at),
+                likes: msg.likes || 0,
+                tips: msg.tips || 0,
+                location: msg.location_name,
+                isHot: msg.is_hot,
+                isImportant: msg.is_important,
+                isBusiness: msg.is_business,
+                replies: [],
+              };
+            });
+            setMessages(formattedMessages);
+          } else {
+            setMessages(SAMPLE_MESSAGES);
+          }
+          setMessagesLoading(false);
+          return; // Success
+        } catch (err: any) {
+          console.error(`Fetch error (attempt ${i + 1}/${retries}):`, err);
+          if (i === retries - 1) {
+            // Final attempt - use sample messages
+            setMessages(SAMPLE_MESSAGES);
+            setMessagesLoading(false);
+          } else {
+            await new Promise(r => setTimeout(r, 300));
+          }
         }
-      } catch (err) {
-        console.error('Fetch error:', err);
-        setMessages(SAMPLE_MESSAGES);
       }
-      setMessagesLoading(false);
     };
 
     if (mounted) {
-      fetchMessages();
+      // Delay slightly to let auth locks clear first
+      setTimeout(() => fetchMessages(), 200);
     }
 
     const subscription = supabase
@@ -880,22 +1107,30 @@ export default function ConceptCardsPage() {
       router.push('/login');
       return;
     }
+    if (!user?.id) {
+      console.error('No user ID available');
+      alert('Please sign in again');
+      return;
+    }
 
     setIsLoading(true);
+    console.log('Creating post with user_id:', user.id);
     
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('messages')
       .insert({
-        user_id: user?.id,
+        user_id: user.id,
         content: composeText,
         location_name: 'Austin, TX',
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      } as any);
+      } as any)
+      .select();
 
     if (error) {
       console.error('Error creating message:', error);
-      alert('Failed to post. Please try again.');
+      alert('Failed to post: ' + error.message);
     } else {
+      console.log('Message created:', data);
       setComposeText('');
       setShowInput(false);
       // Message will appear via real-time subscription
@@ -1004,7 +1239,9 @@ export default function ConceptCardsPage() {
           message={selectedThread}
           isOpen={!!selectedThread}
           onClose={handleCloseThread}
-          onReply={(text) => console.log(`Reply: ${text}`)}
+          onReply={handleReply}
+          currentUser={user}
+          supabase={supabase}
         />
 
         {/* Slim Header - PERFECTLY CENTERED CITY NAME */}
@@ -1169,6 +1406,12 @@ export default function ConceptCardsPage() {
                     onChange={(e) => setComposeText(e.target.value)}
                     onFocus={() => setIsComposing(true)}
                     onBlur={() => setIsComposing(false)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && composeText.trim() && !isLoading) {
+                        e.preventDefault();
+                        handleCreatePost();
+                      }
+                    }}
                     placeholder={isComposing ? "What's happening in Austin?" : "Say something nice..."}
                     className="w-full bg-transparent text-white placeholder-white/40 focus:outline-none text-sm py-2.5 px-2"
                   />
@@ -1178,8 +1421,10 @@ export default function ConceptCardsPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-white/40">{composeText.length}/280</span>
                     <button 
-                      className="p-2.5 rounded-full transition-all hover:scale-105 active:scale-90"
+                      className="p-2.5 rounded-full transition-all hover:scale-105 active:scale-90 disabled:opacity-50"
                       style={{ backgroundColor: COLORS.amber }}
+                      onClick={handleCreatePost}
+                      disabled={isLoading || !composeText.trim()}
                     >
                       <Send className="w-4 h-4 text-white" />
                     </button>
@@ -1212,7 +1457,7 @@ export default function ConceptCardsPage() {
             height: '64px',
           }}
         >
-          <div className="max-w-xl mx-auto h-full flex items-center justify-around px-4">
+          <div className="max-w-xl mx-auto h-full grid grid-cols-3 px-4">
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive = activeNav === item.id;
@@ -1222,10 +1467,10 @@ export default function ConceptCardsPage() {
                 <button
                   key={item.id}
                   onClick={() => handleNavClick(item.id)}
-                  className="flex flex-col items-center justify-center gap-1 py-2 px-4 transition-all active:scale-90"
+                  className={`flex flex-col items-center justify-center gap-1 py-2 transition-all active:scale-90 relative ${isCompose ? '' : ''}`}
                 >
                   {isCompose ? (
-                    // Special amber + button
+                    // Special amber + button - centered
                     <div 
                       className="w-11 h-11 rounded-full flex items-center justify-center transition-transform"
                       style={{ 

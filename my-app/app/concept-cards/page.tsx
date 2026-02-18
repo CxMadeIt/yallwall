@@ -68,7 +68,7 @@ const SAMPLE_MESSAGES = [
     time: "2m ago",
     likes: 12,
     tips: 3,
-    location: "East Austin",
+    location: "Boyce, LA",
     isHot: true,
     replies: [
       { user: "Mike T.", message: "Thanks for the heads up!", time: "1m ago" },
@@ -215,7 +215,7 @@ function ProfileDrawer({ isOpen, onClose, user, onSignOut }: {
             </div>
             <div>
               <h3 className="font-bold text-white text-lg">{user?.display_name || user?.username || "User"}</h3>
-              <p className="text-white/50 text-sm">{user?.city || "Austin"}, {user?.state || "TX"}</p>
+              <p className="text-white/50 text-sm">{user?.city || "Cenla"}, {user?.state || "LA"}</p>
             </div>
           </div>
 
@@ -596,6 +596,8 @@ function GlassMessageCard({
   onThread,
   onSwipe,
   onDelete,
+  onLike,
+  isLiked,
   currentUserId,
 }: { 
   message: typeof SAMPLE_MESSAGES[0] & { user_id?: string; replyCount?: number }; 
@@ -603,6 +605,8 @@ function GlassMessageCard({
   onThread: () => void;
   onSwipe: (direction: 'left' | 'right') => void;
   onDelete?: () => void;
+  onLike?: () => void;
+  isLiked?: boolean;
   currentUserId?: string;
 }) {
   const [showTipAnim, setShowTipAnim] = useState(false);
@@ -823,10 +827,11 @@ function GlassMessageCard({
             </button>
             
             <button 
-              onClick={(e) => { e.stopPropagation(); }}
-              className="flex items-center gap-1 text-white/40 hover:text-red-400 transition-colors text-xs"
+              onClick={(e) => { e.stopPropagation(); onLike?.(); }}
+              className={`flex items-center gap-1 transition-colors text-xs ${isLiked ? 'text-red-500' : 'text-white/40 hover:text-red-400'}`}
+              disabled={!onLike}
             >
-              <Heart className="w-3.5 h-3.5" />
+              <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-red-500' : ''}`} />
               <span>{message.likes}</span>
             </button>
             
@@ -880,6 +885,8 @@ export default function ConceptCardsPage() {
   // Message state - MUST be before any useEffect
   const [messages, setMessages] = useState<typeof SAMPLE_MESSAGES>([]);
   const [messagesLoading, setMessagesLoading] = useState(true);
+  const [likedMessages, setLikedMessages] = useState<Set<string | number>>(new Set());
+  const pendingLikes = useRef<Set<string | number>>(new Set());
 
   // Auth checking - runs on mount and when auth state changes
   useEffect(() => {
@@ -923,8 +930,8 @@ export default function ConceptCardsPage() {
                 username: session.user.email?.split('@')[0] || 'user',
                 display_name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
                 avatar_url: session.user.user_metadata?.avatar_url || null,
-                city: 'Austin',
-                state: 'TX',
+                city: 'Cenla',
+                state: 'LA',
                 lat: null,
                 lng: null,
                 tips_given: 0,
@@ -932,6 +939,16 @@ export default function ConceptCardsPage() {
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
               });
+            }
+            
+            // Fetch liked messages for this user
+            const { data: likesData } = await supabase
+              .from('user_likes')
+              .select('message_id')
+              .eq('user_id', session.user.id);
+            
+            if (likesData) {
+              setLikedMessages(new Set(likesData.map((l: any) => l.message_id)));
             }
           } else {
             setIsAuthenticated(false);
@@ -980,8 +997,8 @@ export default function ConceptCardsPage() {
             username: session.user.email?.split('@')[0] || 'user',
             display_name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
             avatar_url: session.user.user_metadata?.avatar_url || null,
-            city: 'Austin',
-            state: 'TX',
+            city: 'Cenla',
+            state: 'LA',
             lat: null,
             lng: null,
             tips_given: 0,
@@ -989,6 +1006,16 @@ export default function ConceptCardsPage() {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           });
+        }
+        
+        // Fetch liked messages for this user
+        const { data: likesData } = await supabase
+          .from('user_likes')
+          .select('message_id')
+          .eq('user_id', session.user.id);
+        
+        if (likesData) {
+          setLikedMessages(new Set(likesData.map((l: any) => l.message_id)));
         }
       } else if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
@@ -1068,6 +1095,81 @@ export default function ConceptCardsPage() {
     } else {
       // Remove from local state
       setMessages(messages.filter(m => m.id !== messageId));
+    }
+  };
+
+  const handleLikeMessage = async (messageId: string | number) => {
+    if (!isAuthenticated || !user?.id) {
+      alert('Please sign in to like posts');
+      return;
+    }
+
+    // Prevent rapid-fire likes (debounce)
+    if (pendingLikes.current.has(messageId)) return;
+    pendingLikes.current.add(messageId);
+
+    const message = messages.find(m => m.id === messageId);
+    if (!message) {
+      pendingLikes.current.delete(messageId);
+      return;
+    }
+
+    const isCurrentlyLiked = likedMessages.has(messageId);
+
+    // Optimistically update UI first
+    if (isCurrentlyLiked) {
+      setLikedMessages(prev => {
+        const next = new Set(prev);
+        next.delete(messageId);
+        return next;
+      });
+      setMessages(prev => prev.map(m => 
+        m.id === messageId ? { ...m, likes: Math.max(0, m.likes - 1) } : m
+      ));
+    } else {
+      setLikedMessages(prev => new Set(prev).add(messageId));
+      setMessages(prev => prev.map(m => 
+        m.id === messageId ? { ...m, likes: m.likes + 1 } : m
+      ));
+    }
+
+    try {
+      if (isCurrentlyLiked) {
+        // Unlike: remove from user_likes
+        await supabase
+          .from('user_likes')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('message_id', messageId);
+      } else {
+        // Like: add to user_likes
+        await supabase
+          .from('user_likes')
+          .insert({ user_id: user.id, message_id: messageId } as any);
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      // Revert on error
+      if (isCurrentlyLiked) {
+        setLikedMessages(prev => new Set(prev).add(messageId));
+        setMessages(prev => prev.map(m => 
+          m.id === messageId ? { ...m, likes: m.likes + 1 } : m
+        ));
+      } else {
+        setLikedMessages(prev => {
+          const next = new Set(prev);
+          next.delete(messageId);
+          return next;
+        });
+        setMessages(prev => prev.map(m => 
+          m.id === messageId ? { ...m, likes: Math.max(0, m.likes - 1) } : m
+        ));
+      }
+    } finally {
+      // Remove from pending after a short delay to prevent rapid clicks
+      setTimeout(() => {
+        pendingLikes.current.delete(messageId);
+      }, 500);
     }
   };
 
@@ -1193,7 +1295,7 @@ export default function ConceptCardsPage() {
         fetchMessages();
       })
       .subscribe();
-
+    
     return () => {
       subscription.unsubscribe();
     };
@@ -1220,7 +1322,7 @@ export default function ConceptCardsPage() {
       .insert({
         user_id: user.id,
         content: composeText,
-        location_name: 'Austin, TX',
+        location_name: 'Boyce, LA',
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       } as any)
       .select();
@@ -1313,6 +1415,11 @@ export default function ConceptCardsPage() {
           .animate-nav-slide-up {
             animation: nav-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           }
+
+          }
+          .animate-heart-burst {
+            animation: heart-burst 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          }
           .no-scrollbar::-webkit-scrollbar {
             display: none;
           }
@@ -1374,7 +1481,7 @@ export default function ConceptCardsPage() {
             {/* Center: City Name - PERFECTLY CENTERED */}
             <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
               <h1 className="text-white font-bold text-lg tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
-                Austin
+                Cenla
               </h1>
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 bg-green-400 rounded-full live-pulse" />
@@ -1467,6 +1574,8 @@ export default function ConceptCardsPage() {
                     onThread={() => handleOpenThread(msg)}
                     onSwipe={(dir) => console.log(`Swiped ${dir}`)}
                     onDelete={() => handleDeleteMessage(msg.id)}
+                    onLike={() => handleLikeMessage(msg.id)}
+                    isLiked={likedMessages.has(msg.id)}
                     currentUserId={user?.id}
                   />
                 ))
@@ -1513,7 +1622,7 @@ export default function ConceptCardsPage() {
                         handleCreatePost();
                       }
                     }}
-                    placeholder={isComposing ? "What's happening in Austin?" : "Say something nice..."}
+                    placeholder={isComposing ? "What's happening in Cenla?" : "Say something nice..."}
                     className="w-full bg-transparent text-white placeholder-white/40 focus:outline-none text-sm py-2.5 px-2"
                   />
                 </div>

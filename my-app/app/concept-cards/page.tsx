@@ -207,13 +207,27 @@ function Toast({ message, isVisible, onClose }: { message: string; isVisible: bo
 }
 
 // Profile Drawer Component
-function ProfileDrawer({ isOpen, onClose, user, onSignOut }: { 
+function ProfileDrawer({ isOpen, onClose, user, onSignOut, router }: { 
   isOpen: boolean; 
   onClose: () => void;
   user: Profile | null;
   onSignOut: () => void;
+  router: any;
 }) {
   if (!isOpen) return null;
+
+  const menuItems = [
+    { label: 'Edit Profile', path: '/profile/edit' },
+    { label: 'My Posts', path: '/profile/posts' },
+    { label: 'Saved Items', path: '/profile/saved' },
+    { label: 'Settings', path: '/profile/settings' },
+    { label: 'Help & Support', path: '/profile/help' },
+  ];
+
+  const handleNavigate = (path: string) => {
+    onClose();
+    router.push(path);
+  };
 
   return (
     <>
@@ -266,12 +280,13 @@ function ProfileDrawer({ isOpen, onClose, user, onSignOut }: {
           </div>
 
           <div className="space-y-1">
-            {['Edit Profile', 'My Posts', 'Saved Items', 'Settings', 'Help & Support'].map((item) => (
+            {menuItems.map((item) => (
               <button 
-                key={item} 
+                key={item.label} 
+                onClick={() => handleNavigate(item.path)}
                 className="w-full text-left px-4 py-3.5 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition-all text-sm font-medium active:scale-[0.98]"
               >
-                {item}
+                {item.label}
               </button>
             ))}
           </div>
@@ -1495,6 +1510,7 @@ export default function ConceptCardsPage() {
           onClose={() => setIsProfileOpen(false)} 
           user={user}
           onSignOut={handleSignOut}
+          router={router}
         />
         <ThreadModal 
           message={selectedThread}

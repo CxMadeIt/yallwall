@@ -673,7 +673,7 @@ function GlassMessageCard({
     return (
       <div className="w-full animate-fade-in my-3" style={{ animationDelay: `${message.id * 50}ms` }}>
         <div 
-          className="p-4 cursor-pointer transition-all duration-200 active:scale-[0.98] relative overflow-hidden"
+          className="p-3.5 cursor-pointer transition-all duration-200 active:scale-[0.98] relative overflow-hidden"
           onClick={onThread}
           style={{
             background: 'linear-gradient(135deg, rgba(245, 166, 35, 0.18) 0%, rgba(245, 166, 35, 0.08) 100%)',
@@ -777,7 +777,7 @@ function GlassMessageCard({
 
       {/* Glass Card - 3D Liquid Glass Effect */}
       <div 
-        className="relative p-4 cursor-pointer transition-all duration-200 active:scale-[0.98] group"
+        className="relative p-3.5 cursor-pointer transition-all duration-200 active:scale-[0.98] group"
         style={{ 
           background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%)',
           backdropFilter: 'blur(24px) saturate(180%)',

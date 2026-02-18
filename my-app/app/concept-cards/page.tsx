@@ -313,6 +313,7 @@ function ThreadModal({
             const profile = profileMap.get(reply.user_id);
             return {
               id: reply.id,
+              user_id: reply.user_id,
               user: profile?.display_name || profile?.username || 'Anonymous',
               avatar: (profile?.display_name || profile?.username || 'U').substring(0, 2).toUpperCase(),
               message: reply.content,
@@ -418,20 +419,46 @@ function ThreadModal({
               <p className="text-center text-white/40 text-sm py-8">No replies yet. Be the first!</p>
             ) : (
               replies.map((reply, idx) => (
-                <div key={reply.id || idx} className="flex gap-3 animate-fade-in" style={{ animationDelay: `${idx * 50}ms` }}>
+                <div key={reply.id || idx} className="flex gap-3 animate-fade-in group relative" style={{ animationDelay: `${idx * 50}ms` }}>
                   <div 
                     className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white/80 shrink-0"
                     style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
                   >
                     {reply.avatar}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 pr-6">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="font-semibold text-sm text-white">{reply.user}</span>
                       <span className="text-xs text-white/40">{reply.time}</span>
                     </div>
                     <p className="text-sm text-white/80">{reply.message}</p>
                   </div>
+                  {/* X button for own replies - always visible on mobile */}
+                  {currentUser?.id === reply.user_id && (
+                    <button
+                      onClick={async () => {
+                        if (!confirm('Delete this reply?')) return;
+                        console.log('Deleting reply:', reply.id);
+                        const { data, error } = await supabase
+                          .from('replies')
+                          .delete()
+                          .eq('id', reply.id)
+                          .select();
+                        console.log('Delete result:', { data, error });
+                        if (error) {
+                          console.error('Delete error:', error);
+                          alert('Failed to delete reply: ' + error.message);
+                        } else {
+                          console.log('Reply deleted successfully');
+                          setReplies(replies.filter(r => r.id !== reply.id));
+                        }
+                      }}
+                      className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center rounded-full text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all z-10"
+                      title="Delete reply"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               ))
             )}
@@ -492,6 +519,7 @@ function ThreadModal({
                           const profile = profileMap.get(reply.user_id);
                           return {
                             id: reply.id,
+                            user_id: reply.user_id,
                             user: profile?.display_name || profile?.username || 'Anonymous',
                             avatar: (profile?.display_name || profile?.username || 'U').substring(0, 2).toUpperCase(),
                             message: reply.content,
@@ -530,6 +558,7 @@ function ThreadModal({
                           const profile = profileMap.get(reply.user_id);
                           return {
                             id: reply.id,
+                            user_id: reply.user_id,
                             user: profile?.display_name || profile?.username || 'Anonymous',
                             avatar: (profile?.display_name || profile?.username || 'U').substring(0, 2).toUpperCase(),
                             message: reply.content,
@@ -566,16 +595,21 @@ function GlassMessageCard({
   onTip, 
   onThread,
   onSwipe,
+  onDelete,
+  currentUserId,
 }: { 
-  message: typeof SAMPLE_MESSAGES[0]; 
+  message: typeof SAMPLE_MESSAGES[0] & { user_id?: string; replyCount?: number }; 
   onTip: () => void;
   onThread: () => void;
   onSwipe: (direction: 'left' | 'right') => void;
+  onDelete?: () => void;
+  currentUserId?: string;
 }) {
   const [showTipAnim, setShowTipAnim] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const touchStart = useRef(0);
+  const isOwnPost = currentUserId && message.user_id === currentUserId;
 
   const handleTip = () => {
     setShowTipAnim(true);
@@ -661,8 +695,19 @@ function GlassMessageCard({
                   className="flex items-center gap-1 text-xs text-white/50 hover:text-white/80 transition-colors"
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
-                  {message.replies?.length || 0} replies
+                  {message.replyCount || 0} replies
                 </button>
+                {isOwnPost && (
+                  <>
+                    <span className="text-white/20">|</span>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+                      className="text-xs text-red-400/60 hover:text-red-400 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -790,8 +835,17 @@ function GlassMessageCard({
               className="flex items-center gap-1 text-white/40 hover:text-blue-400 transition-colors text-xs"
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              <span>{message.replies?.length || 0}</span>
+              <span>{message.replyCount || 0}</span>
             </button>
+            
+            {isOwnPost && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+                className="flex items-center gap-1 text-white/30 hover:text-red-400 transition-colors text-xs ml-2"
+              >
+                <span>Delete</span>
+              </button>
+            )}
           </div>
           
           <span className="text-[10px] text-white/30">23h left</span>
@@ -952,7 +1006,20 @@ export default function ConceptCardsPage() {
     setShowInput(false);
   };
 
-  const handleCloseThread = () => {
+  const handleCloseThread = async () => {
+    // Refresh reply count for the message that was just viewed
+    if (selectedThread) {
+      const { count } = await supabase
+        .from('replies')
+        .select('*', { count: 'exact', head: true })
+        .eq('message_id', selectedThread.id);
+      
+      setMessages(prev => prev.map(m => 
+        m.id === selectedThread.id 
+          ? { ...m, replyCount: count || 0 }
+          : m
+      ));
+    }
     setSelectedThread(null);
   };
 
@@ -984,6 +1051,23 @@ export default function ConceptCardsPage() {
       alert('Failed to post reply: ' + error.message);
     } else {
       console.log('Reply created successfully:', data);
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string | number) => {
+    if (!confirm('Delete this post?')) return;
+    
+    const { error } = await supabase
+      .from('messages')
+      .delete()
+      .eq('id', messageId);
+    
+    if (error) {
+      console.error('Error deleting message:', error);
+      alert('Failed to delete post');
+    } else {
+      // Remove from local state
+      setMessages(messages.filter(m => m.id !== messageId));
     }
   };
 
@@ -1036,6 +1120,7 @@ export default function ConceptCardsPage() {
           } else if (messagesData && messagesData.length > 0) {
             // Get unique user IDs from messages
             const userIds = [...new Set(messagesData.map((m: any) => m.user_id))];
+            const messageIds = messagesData.map((m: any) => m.id);
             
             // Fetch profiles separately
             const { data: profilesData } = await supabase
@@ -1047,10 +1132,23 @@ export default function ConceptCardsPage() {
             const profileMap = new Map();
             profilesData?.forEach((p: any) => profileMap.set(p.id, p));
             
+            // Fetch reply counts for each message
+            const { data: repliesData } = await supabase
+              .from('replies')
+              .select('message_id')
+              .in('message_id', messageIds);
+            
+            // Count replies per message
+            const replyCountMap = new Map();
+            repliesData?.forEach((r: any) => {
+              replyCountMap.set(r.message_id, (replyCountMap.get(r.message_id) || 0) + 1);
+            });
+            
             const formattedMessages = messagesData.map((msg: any) => {
               const profile = profileMap.get(msg.user_id);
               return {
                 id: msg.id,
+                user_id: msg.user_id, // Keep user_id for delete check
                 user: profile?.display_name || profile?.username || 'Anonymous',
                 avatar: (profile?.display_name || profile?.username || 'U').substring(0, 2).toUpperCase(),
                 message: msg.content,
@@ -1062,6 +1160,7 @@ export default function ConceptCardsPage() {
                 isImportant: msg.is_important,
                 isBusiness: msg.is_business,
                 replies: [],
+                replyCount: replyCountMap.get(msg.id) || 0,
               };
             });
             setMessages(formattedMessages);
@@ -1367,6 +1466,8 @@ export default function ConceptCardsPage() {
                     onTip={() => console.log(`Tipped ${msg.user}`)}
                     onThread={() => handleOpenThread(msg)}
                     onSwipe={(dir) => console.log(`Swiped ${dir}`)}
+                    onDelete={() => handleDeleteMessage(msg.id)}
+                    currentUserId={user?.id}
                   />
                 ))
               )}

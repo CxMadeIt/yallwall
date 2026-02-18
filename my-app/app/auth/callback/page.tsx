@@ -24,9 +24,9 @@ export default function AuthCallbackPage() {
         }
 
         if (session) {
-          console.log("Auth successful, redirecting...");
-          // Successfully authenticated, redirect to home
-          router.push("/");
+          console.log("Auth successful, redirecting to app...");
+          // Successfully authenticated, redirect to chat app
+          router.push("/concept-cards");
           router.refresh();
         } else {
           // No session yet, wait a bit and check again
@@ -34,7 +34,7 @@ export default function AuthCallbackPage() {
           setTimeout(async () => {
             const { data: { session: retrySession } } = await supabase.auth.getSession();
             if (retrySession) {
-              router.push("/");
+              router.push("/concept-cards");
               router.refresh();
             } else {
               setError("Authentication failed. Please try again.");

@@ -1,0 +1,53 @@
+🎯 YALLWALL PROJECT BRIEF
+
+WHAT IS IT:
+YallWall is a hyper-local, real-time chat platform - like a "living room" for your city. Think Facebook Groups but ephemeral (24hr disappearing messages), faster, and mobile-first.
+
+TARGET USERS:
+- Primary: 35-55+ year olds in Central Louisiana (Cenla) who want neighborhood updates
+- Secondary: Local businesses in Cenla needing affordable local ads
+
+CORE FEATURES:
+✅ Real-time chat with card-based UI (not bubbles)
+✅ 24-hour disappearing messages
+✅ Customizable user bubble colors
+✅ Time filters: Live, 1 Hour, Today, Week
+✅ Location tags on posts
+✅ Inline business ads
+✅ One-tap incident reporting (Phase 2)
+
+TECH STACK:
+- Frontend: Next.js + TypeScript + Tailwind + shadcn/ui
+- Backend: Supabase (PostgreSQL + Auth + Realtime WebSockets)
+- Hosting: GoDaddy + Cloudflare
+- Domain: yallwall.com
+
+DESIGN:
+- Deep Navy background (#0A1929) - professional, trustworthy
+- Cream/Vanilla cards (#FEFDF9) - warm, readable
+- Coral accent (#FF6B4A) - actions, urgency
+- Mobile-first design
+
+CURRENT STATUS:
+✅ Landing page deployed
+✅ Database schema designed
+✅ Marquee banner + chat UI built
+🔄 Setting up Supabase auth
+📋 Next: Real-time chat, user auth flows
+
+PILOT CITIES:
+1. Central Louisiana (Cenla) - LAUNCH CITY 🏠
+2. Austin, TX (2nd city)
+3. Additional Louisiana cities
+
+HOW YOU CAN HELP:
+- Research best practices for real-time chat
+- Write documentation (privacy policy, TOS)
+- Find competitor analysis
+- Technical research (Supabase, maps, etc.)
+- Marketing copy and outreach templates
+
+PROJECT ROOT: /home/chris/workspace/yallwall/
+Always save files here and keep design consistent with navy/cream/coral palette.
+
+Questions? Ask for clarification!

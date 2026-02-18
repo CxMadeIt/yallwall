@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Next.js build output
+.next/
+out/
+dist/
+build/
+
+# Production
+*.pem
+
+# Environment files (NEVER commit these!)
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local files
+*.log
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+Thumbs.db
+
+# Supabase
+.supabase/
+
+# Misc
+*.zip
+*.tar.gz

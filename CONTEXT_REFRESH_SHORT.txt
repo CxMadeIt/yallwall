@@ -1,0 +1,64 @@
+🎯 YALLWALL - CONTEXT REFRESH
+
+WHAT: Hyper-local real-time chat platform
+TAGLINE: "Your City's Living Room"  
+URL: https://yallwall.com
+
+✅ BUILT (LIQUID GLASS 2026):
+- Deep navy background (#0D1B2A)
+- Frosted glass cards with blur(20px)
+- Amber accent (#F5A623)
+- Card-based chat UI (glassmorphism)
+- Swipe gestures (right=tip, left=hide)
+- Tip system with 🪙 animations
+- Thread view for replies
+- Time filters: Live, 1Hr, Today, Week
+- Slim header: avatar | city | bell/menu
+- Fixed bottom nav with + button
+- Profile drawer (slides from left)
+- 24hr disappearing messages
+
+🏗️ STACK:
+Next.js + TypeScript + Tailwind + shadcn/ui
+Supabase (PostgreSQL + Auth + Realtime)
+Cloudflare Pages (recommended)
+
+📁 STRUCTURE:
+/home/chris/workspace/yallwall/
+├── my-app/
+│   ├── app/concept-cards/   # CURRENT MVP - LIQUID GLASS
+│   ├── lib/supabase.ts      # Supabase client
+│   └── dist/                # DEPLOY THIS
+├── DATABASE_SCHEMA.sql      # DB setup (ready to run)
+├── SUPABASE_SETUP.md        # Instructions
+└── CONTEXT_REFRESH.md       # Full details
+
+🚀 NEXT:
+1. ✅ Deployed! (DNS propagating)
+2. ⏳ Create Supabase project (in progress)
+3. ⏳ Run DATABASE_SCHEMA.sql in SQL Editor
+4. ⏳ Add env vars to .env.local
+5. Build auth pages (login/signup)
+6. Connect real messages to database
+7. Real-time chat with Supabase Realtime
+
+🎯 POSITIONING:
+"Nextdoor's opposite" - Fast, positive, city-scale
+Pilot: Central Louisiana (Cenla) first, then Austin
+Target: 35-55+ year olds
+Design: 2026 Liquid Glass (visionOS/iOS aesthetic)
+
+💡 KILLER FEATURES:
+- Emergency Mode (auto-pinned weather alerts)
+- Business Drops (giveaways/contests)
+- Tipping economy (reward kindness)
+- QR Code tips (real-life tipping)
+
+⚠️ IMPORTANT:
+- Mobile-first always
+- Tip economy = secret sauce
+- Use Cloudflare Pages (modern deployment)
+- Database schema ready to run!
+- See CONTEXT_REFRESH.md for full details
+
+READY TO: Supabase setup → Auth → Real-time chat

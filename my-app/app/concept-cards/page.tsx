@@ -41,7 +41,7 @@ const COLORS = {
 const NAV_ITEMS = [
   { id: "feed", icon: Home, label: "Feed" },
   { id: "compose", icon: Plus, label: "Post", isSpecial: true },
-  { id: "notifications", icon: Bell, label: "Notifications" },
+  { id: "menu", icon: Menu, label: "Menu" },
 ];
 
 // Helper to format time - available globally
@@ -1252,6 +1252,13 @@ export default function ConceptCardsPage() {
       if (!showInput) {
         setTimeout(() => inputRef.current?.focus(), 100);
       }
+    } else if (navId === 'menu') {
+      // Open profile menu from bottom nav
+      if (user) {
+        setIsProfileOpen(true);
+      } else {
+        router.push('/login');
+      }
     } else {
       setActiveNav(navId);
     }
@@ -1579,21 +1586,20 @@ export default function ConceptCardsPage() {
               />
             </div>
 
-            {/* Right: City + Neighbors - Symmetrical from center */}
-            <div className="absolute flex flex-col items-start" style={{ left: 'calc(50% + 40px)' }}>
-              <h1 className="text-white font-bold text-sm tracking-tight whitespace-nowrap" style={{ fontFamily: "var(--font-jakarta)" }}>
+            {/* Right: City - Symmetrical from center */}
+            <div className="absolute" style={{ left: 'calc(50% + 40px)' }}>
+              <h1 className="text-white font-bold text-base tracking-tight whitespace-nowrap" style={{ fontFamily: "var(--font-jakarta)" }}>
                 Cenla
               </h1>
-              <div className="flex items-center gap-1">
-                <div className="w-1 h-1 bg-green-400 rounded-full live-pulse" />
-                <span className="text-[9px] text-white/50 whitespace-nowrap">247 neighbors</span>
-              </div>
             </div>
 
-            {/* Far Right: Menu Button */}
+            {/* Far Right: Notifications Button */}
             <div className="absolute right-4">
-              <button className="p-2 rounded-full hover:bg-white/10 transition-colors active:scale-90">
-                <Menu className="w-5 h-5 text-white/80" />
+              <button className="p-2 rounded-full hover:bg-white/10 transition-colors relative active:scale-90">
+                <Bell className="w-5 h-5 text-white/80" />
+                {unreadCount > 0 && (
+                  <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-400 rounded-full" />
+                )}
               </button>
             </div>
           </div>
@@ -1638,6 +1644,11 @@ export default function ConceptCardsPage() {
                   );
                 })}
               </div>
+            </div>
+            {/* Neighbors Online - Below Time Tabs */}
+            <div className="flex items-center justify-center gap-1.5 mt-2">
+              <div className="w-1.5 h-1.5 bg-green-400 rounded-full live-pulse" />
+              <span className="text-xs text-white/60">333 Neighbors Online</span>
             </div>
           </div>
         </div>

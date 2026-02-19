@@ -648,7 +648,6 @@ function GlassMessageCard({
   message, 
   onTip, 
   onThread,
-  onSwipe,
   onDelete,
   onLike,
   isLiked,
@@ -657,43 +656,17 @@ function GlassMessageCard({
   message: typeof SAMPLE_MESSAGES[0] & { user_id?: string; replyCount?: number }; 
   onTip: () => void;
   onThread: () => void;
-  onSwipe: (direction: 'left' | 'right') => void;
   onDelete?: () => void;
   onLike?: () => void;
   isLiked?: boolean;
   currentUserId?: string;
 }) {
   const [showTipAnim, setShowTipAnim] = useState(false);
-  const [swipeOffset, setSwipeOffset] = useState(0);
-  const [isSwiping, setIsSwiping] = useState(false);
-  const touchStart = useRef(0);
   const isOwnPost = currentUserId && message.user_id === currentUserId;
 
   const handleTip = () => {
     setShowTipAnim(true);
     onTip();
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStart.current = e.touches[0].clientX;
-    setIsSwiping(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isSwiping) return;
-    const diff = e.touches[0].clientX - touchStart.current;
-    setSwipeOffset(Math.max(-100, Math.min(100, diff)));
-  };
-
-  const handleTouchEnd = () => {
-    setIsSwiping(false);
-    if (swipeOffset > 50) {
-      handleTip();
-      onSwipe('right');
-    } else if (swipeOffset < -50) {
-      onSwipe('left');
-    }
-    setSwipeOffset(0);
   };
 
   if (message.isBusiness) {
@@ -778,30 +751,7 @@ function GlassMessageCard({
     <div 
       className="w-full animate-fade-in my-2 relative"
       style={{ animationDelay: `${message.id * 50}ms` }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     >
-      {/* Swipe hints */}
-      <div 
-        className="absolute inset-y-0 left-0 w-20 flex items-center justify-center rounded-l-2xl transition-opacity"
-        style={{ 
-          backgroundColor: COLORS.amber,
-          opacity: swipeOffset > 30 ? Math.min(1, (swipeOffset - 30) / 40) : 0,
-        }}
-      >
-        <span className="text-white font-bold text-xs">TIP 🪙</span>
-      </div>
-      <div 
-        className="absolute inset-y-0 right-0 w-20 flex items-center justify-center rounded-r-2xl transition-opacity"
-        style={{ 
-          backgroundColor: 'rgba(107, 114, 128, 0.8)',
-          opacity: swipeOffset < -30 ? Math.min(1, (-swipeOffset - 30) / 40) : 0,
-        }}
-      >
-        <span className="text-white font-bold text-xs">HIDE</span>
-      </div>
-
       {/* Glass Card - 3D Liquid Glass Effect */}
       <div 
         className="relative p-3.5 cursor-pointer transition-all duration-200 active:scale-[0.98] group"
@@ -817,7 +767,6 @@ function GlassMessageCard({
             inset 0 1px 0 rgba(255, 255, 255, 0.15),
             inset 0 -1px 0 rgba(0, 0, 0, 0.1)
           `,
-          transform: `translateX(${swipeOffset}px) translateY(0) rotateX(0deg)`,
         }}
         onClick={onThread}
       >
@@ -908,9 +857,6 @@ function GlassMessageCard({
           )}
         </div>
 
-        <div className="absolute bottom-1 right-3 text-[8px] text-white/20">
-          ← swipe →
-        </div>
       </div>
     </div>
   );
@@ -1197,17 +1143,29 @@ export default function ConceptCardsPage() {
 
     try {
       if (isCurrentlyLiked) {
-        // Unlike: remove from user_likes
+        // Unlike: remove from user_likes and decrement likes count
         await supabase
           .from('user_likes')
           .delete()
           .eq('user_id', user.id)
           .eq('message_id', messageId);
+        
+        // Decrement likes count on message
+        await (supabase
+          .from('messages') as any)
+          .update({ likes: Math.max(0, (message.likes || 0) - 1) })
+          .eq('id', messageId);
       } else {
-        // Like: add to user_likes
+        // Like: add to user_likes and increment likes count
         await supabase
           .from('user_likes')
           .insert({ user_id: user.id, message_id: messageId } as any);
+        
+        // Increment likes count on message
+        await (supabase
+          .from('messages') as any)
+          .update({ likes: (message.likes || 0) + 1 })
+          .eq('id', messageId);
       }
     } catch (error) {
       console.error('Error toggling like:', error);
@@ -1678,7 +1636,6 @@ export default function ConceptCardsPage() {
                     message={msg}
                     onTip={() => console.log(`Tipped ${msg.user}`)}
                     onThread={() => handleOpenThread(msg)}
-                    onSwipe={(dir) => console.log(`Swiped ${dir}`)}
                     onDelete={() => handleDeleteMessage(msg.id)}
                     onLike={() => handleLikeMessage(msg.id)}
                     isLiked={likedMessages.has(msg.id)}

@@ -1834,9 +1834,7 @@ export default function ConceptCardsPage() {
                     <>
                       <Icon 
                         className="w-6 h-6 transition-colors duration-200" 
-                        style={{ 
-                          color: isActive ? COLORS.cream : 'rgba(250,248,245,0.6)',
-                        }} 
+                        color={isActive ? COLORS.cream : 'rgba(250,248,245,0.6)'}
                       />
                       <span 
                         className="text-[10px] transition-colors duration-200"

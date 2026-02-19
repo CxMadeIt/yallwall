@@ -697,9 +697,9 @@ function GlassMessageCard({
 
   if (message.isBusiness) {
     return (
-      <div className="w-full animate-fade-in my-3" style={{ animationDelay: `${message.id * 50}ms` }}>
+      <div className="w-full animate-fade-in my-4" style={{ animationDelay: `${message.id * 50}ms` }}>
         <div 
-          className="p-3.5 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden"
+          className="p-2 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden"
           onClick={onThread}
           style={{
             background: '#FAF8F5',
@@ -777,9 +777,9 @@ function GlassMessageCard({
       className="w-full animate-fade-in my-2 relative"
       style={{ animationDelay: `${message.id * 50}ms` }}
     >
-      {/* White Card - Premium 3D Effect */}
+      {/* Cream Card - Premium 3D Effect */}
       <div 
-        className="relative p-3.5 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 group"
+        className="relative p-2 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 group"
         style={{ 
           background: '#FAF8F5',
           borderRadius: '18px',
@@ -1819,11 +1819,11 @@ export default function ConceptCardsPage() {
                   className={`flex flex-col items-center justify-center gap-1 py-2 transition-all active:scale-90 relative ${isCompose ? '' : ''}`}
                 >
                   {isCompose ? (
-                    // Special amber + button - centered
+                    // Special yellow + button - centered
                     <div 
                       className="w-11 h-11 rounded-full flex items-center justify-center transition-transform"
                       style={{ 
-                        backgroundColor: COLORS.accent,
+                        backgroundColor: COLORS.yellow,
                         boxShadow: '0 4px 12px rgba(245, 166, 35, 0.4)',
                         transform: isActive ? 'scale(1.1)' : 'scale(1)',
                       }}
@@ -1835,13 +1835,13 @@ export default function ConceptCardsPage() {
                       <Icon 
                         className="w-6 h-6 transition-colors duration-200" 
                         style={{ 
-                          color: isActive ? COLORS.accent : 'rgba(255,255,255,0.5)',
+                          color: isActive ? COLORS.yellow : COLORS.yellow,
                         }} 
                       />
                       <span 
                         className="text-[10px] transition-colors duration-200"
                         style={{ 
-                          color: isActive ? COLORS.accent : 'rgba(255,255,255,0.5)',
+                          color: isActive ? COLORS.yellow : COLORS.yellow,
                         }}
                       >
                         {item.label}

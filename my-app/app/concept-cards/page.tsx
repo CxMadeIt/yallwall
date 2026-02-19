@@ -1741,9 +1741,19 @@ export default function ConceptCardsPage() {
           }}
         >
           <div className="max-w-xl mx-auto animate-input-expand">
-            <div className="glass-input p-1.5">
+            <div 
+              className="p-1.5 rounded-2xl"
+              style={{ 
+                backgroundColor: COLORS.navyDark,
+                border: '1px solid rgba(255,255,255,0.1)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+              }}
+            >
               <div className="flex items-center gap-2">
-                <button className="p-2.5 rounded-full hover:bg-white/10 transition-colors text-white/60 active:scale-90">
+                <button 
+                  className="p-2.5 rounded-full hover:bg-white/10 transition-colors active:scale-90"
+                  style={{ color: COLORS.cream }}
+                >
                   <MapPin className="w-5 h-5" />
                 </button>
                 
@@ -1762,16 +1772,19 @@ export default function ConceptCardsPage() {
                       }
                     }}
                     placeholder={isComposing ? "What's happening in Cenla?" : "Say something nice..."}
-                    className="w-full bg-transparent text-white placeholder-white/40 focus:outline-none text-sm py-2.5 px-2"
+                    className="w-full bg-transparent focus:outline-none text-sm py-2.5 px-2 placeholder:text-white/40"
+                    style={{ 
+                      color: COLORS.cream,
+                    }}
                   />
                 </div>
                 
                 {isComposing ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-white/40">{composeText.length}/280</span>
+                    <span className="text-xs" style={{ color: 'rgba(250,248,245,0.5)' }}>{composeText.length}/280</span>
                     <button 
                       className="p-2.5 rounded-full transition-all hover:scale-105 active:scale-90 disabled:opacity-50"
-                      style={{ backgroundColor: COLORS.accent }}
+                      style={{ backgroundColor: COLORS.yellow }}
                       onClick={handleCreatePost}
                       disabled={isLoading || !composeText.trim()}
                     >
@@ -1781,7 +1794,7 @@ export default function ConceptCardsPage() {
                 ) : (
                   <button 
                     className="p-2.5 rounded-full transition-all hover:scale-105 active:scale-90 disabled:opacity-50"
-                    style={{ backgroundColor: COLORS.accent }}
+                    style={{ backgroundColor: COLORS.yellow }}
                     onClick={handleCreatePost}
                     disabled={isLoading || !composeText.trim()}
                   >

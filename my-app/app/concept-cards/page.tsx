@@ -137,12 +137,12 @@ const SAMPLE_MESSAGES = [
   },
 ];
 
-// Time filter tabs
-const TIME_TABS = [
-  { id: "live", label: "Live" },
-  { id: "hour", label: "1 Hour" },
-  { id: "today", label: "Today" },
-  { id: "week", label: "Week" },
+// Content filter pills
+const CONTENT_FILTERS = [
+  { id: "live", label: "Live", icon: "🔴", color: "#ef4444" },
+  { id: "hot", label: "Hot", icon: "🔥", color: "#F5A623" },
+  { id: "alerts", label: "Alerts", icon: "🚨", color: "#dc2626" },
+  { id: "deals", label: "Local Deals", icon: "🏪", color: "#22c55e" },
 ];
 
 // Tip Animation Component
@@ -1574,36 +1574,32 @@ export default function ConceptCardsPage() {
           }}
         >
           <div className="max-w-xl mx-auto">
-            <div className="glass-tabs p-1.5">
-              <div className="grid grid-cols-4 gap-1">
-                {TIME_TABS.map((tab) => {
-                  const isActive = activeTab === tab.id;
-                  const isLive = tab.id === "live";
-                  
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all relative active:scale-95 ${
-                        isActive 
-                          ? "text-white" 
-                          : "text-white/50 hover:text-white/80"
-                      }`}
-                      style={{
-                        backgroundColor: isActive ? COLORS.amber : 'transparent',
-                        boxShadow: isActive ? '0 2px 12px rgba(245, 166, 35, 0.4)' : 'none',
-                      }}
-                    >
-                      {isLive && isActive && (
-                        <span className="absolute left-2 w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-                      )}
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
+            {/* Content Filter Pills - Horizontally Scrollable */}
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 px-1">
+              {CONTENT_FILTERS.map((filter) => {
+                const isActive = activeTab === filter.id;
+                
+                return (
+                  <button
+                    key={filter.id}
+                    onClick={() => setActiveTab(filter.id)}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all active:scale-95 shrink-0 ${
+                      isActive 
+                        ? "text-white shadow-lg" 
+                        : "text-white/60 hover:text-white/90 bg-white/5 hover:bg-white/10"
+                    }`}
+                    style={{
+                      backgroundColor: isActive ? filter.color : undefined,
+                      boxShadow: isActive ? `0 2px 12px ${filter.color}40` : 'none',
+                    }}
+                  >
+                    <span>{filter.icon}</span>
+                    <span>{filter.label}</span>
+                  </button>
+                );
+              })}
             </div>
-            {/* Neighbors Online - Below Time Tabs */}
+            {/* Neighbors Online - Below Filter Pills */}
             <div className="flex items-center justify-center gap-1.5 mt-2">
               <div className="w-1.5 h-1.5 bg-green-400 rounded-full live-pulse" />
               <span className="text-xs text-white/60">333 Neighbors Online</span>
@@ -1630,18 +1626,48 @@ export default function ConceptCardsPage() {
                   <p className="text-white/40 text-sm">No messages yet. Be the first!</p>
                 </div>
               ) : (
-                messages.map((msg) => (
-                  <GlassMessageCard 
-                    key={msg.id} 
-                    message={msg}
-                    onTip={() => console.log(`Tipped ${msg.user}`)}
-                    onThread={() => handleOpenThread(msg)}
-                    onDelete={() => handleDeleteMessage(msg.id)}
-                    onLike={() => handleLikeMessage(msg.id)}
-                    isLiked={likedMessages.has(msg.id)}
-                    currentUserId={user?.id}
-                  />
-                ))
+                (() => {
+                  // Filter messages based on active tab
+                  const filteredMessages = messages.filter((msg) => {
+                    switch (activeTab) {
+                      case 'hot':
+                        return (msg.tips || 0) > 0 || (msg.likes || 0) >= 3;
+                      case 'alerts':
+                        return msg.isImportant || msg.isHot;
+                      case 'deals':
+                        return msg.isBusiness;
+                      case 'live':
+                      default:
+                        return true; // Show all
+                    }
+                  });
+                  
+                  if (filteredMessages.length === 0) {
+                    return (
+                      <div className="text-center py-12">
+                        <p className="text-white/40 text-sm">
+                          {activeTab === 'hot' && "Nothing hot right now. Be the first to tip!"}
+                          {activeTab === 'alerts' && "No alerts. All clear! ✅"}
+                          {activeTab === 'deals' && "No local deals right now. Check back later!"}
+                          {activeTab === 'live' && "No messages yet. Be the first!"}
+                        </p>
+                      </div>
+                    );
+                  }
+                  
+                  return filteredMessages.map((msg) => (
+                    <GlassMessageCard 
+                      key={msg.id} 
+                      message={msg}
+                      onTip={() => console.log(`Tipped ${msg.user}`)}
+                      onThread={() => handleOpenThread(msg)}
+                      onDelete={() => handleDeleteMessage(msg.id)}
+                      onLike={() => handleLikeMessage(msg.id)}
+                      isLiked={likedMessages.has(msg.id)}
+                      currentUserId={user?.id}
+                    />
+                  ));
+                })()
               )}
             </div>
             

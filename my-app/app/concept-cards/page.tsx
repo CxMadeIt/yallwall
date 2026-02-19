@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { createClientClient, Profile } from "@/lib/supabase";
-import Image from "next/image";
 
 // Fonts
 const jakarta = Plus_Jakarta_Sans({ 
@@ -258,13 +257,11 @@ function ProfileDrawer({ isOpen, onClose, user, onSignOut, router }: {
 
           {/* Logo */}
           <div className="flex justify-center mt-4 mb-6">
-            <Image 
-              src="/images/logo.png" 
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
+              src="../images/logo.png" 
               alt="YallWall" 
-              width={48}
-              height={48}
-              className="object-contain"
-              priority
+              className="w-12 h-12 object-contain"
             />
           </div>
 
@@ -1567,13 +1564,11 @@ export default function ConceptCardsPage() {
             {/* Center: Logo + City Name - PERFECTLY CENTERED */}
             <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
               <div className="flex items-center gap-2">
-                <Image 
-                  src="/images/logo.png" 
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
+                  src="./images/logo.png" 
                   alt="YallWall" 
-                  width={32}
-                  height={32}
-                  className="object-contain"
-                  priority
+                  className="w-8 h-8 object-contain"
                 />
                 <h1 className="text-white font-bold text-lg tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
                   Cenla

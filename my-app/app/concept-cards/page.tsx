@@ -137,12 +137,12 @@ const SAMPLE_MESSAGES = [
   },
 ];
 
-// Content filter pills
+// Content filter segments
 const CONTENT_FILTERS = [
-  { id: "live", label: "Live", icon: "🔴", color: "#ef4444" },
-  { id: "hot", label: "Hot", icon: "🔥", color: "#F5A623" },
-  { id: "alerts", label: "Alerts", icon: "🚨", color: "#dc2626" },
-  { id: "deals", label: "Local Deals", icon: "🏪", color: "#22c55e" },
+  { id: "live", label: "Live", icon: "", isLive: true },
+  { id: "hot", label: "Hot", icon: "🔥" },
+  { id: "alerts", label: "Alerts", icon: "🚨" },
+  { id: "deals", label: "Local Deals", icon: "🏪" },
 ];
 
 // Tip Animation Component
@@ -1574,30 +1574,37 @@ export default function ConceptCardsPage() {
           }}
         >
           <div className="max-w-xl mx-auto">
-            {/* Content Filter Pills - Horizontally Scrollable */}
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 px-1">
-              {CONTENT_FILTERS.map((filter) => {
-                const isActive = activeTab === filter.id;
-                
-                return (
-                  <button
-                    key={filter.id}
-                    onClick={() => setActiveTab(filter.id)}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all active:scale-95 shrink-0 ${
-                      isActive 
-                        ? "text-white shadow-lg" 
-                        : "text-white/60 hover:text-white/90 bg-white/5 hover:bg-white/10"
-                    }`}
-                    style={{
-                      backgroundColor: isActive ? filter.color : undefined,
-                      boxShadow: isActive ? `0 2px 12px ${filter.color}40` : 'none',
-                    }}
-                  >
-                    <span>{filter.icon}</span>
-                    <span>{filter.label}</span>
-                  </button>
-                );
-              })}
+            {/* Content Filter Segmented Control */}
+            <div className="flex justify-center">
+              <div 
+                className="inline-flex p-1 rounded-2xl bg-white/5 backdrop-blur-sm"
+                style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+              >
+                {CONTENT_FILTERS.map((filter) => {
+                  const isActive = activeTab === filter.id;
+                  
+                  return (
+                    <button
+                      key={filter.id}
+                      onClick={() => setActiveTab(filter.id)}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all active:scale-95 ${
+                        isActive 
+                          ? "text-white bg-amber-500 shadow-lg" 
+                          : "text-white/50 hover:text-white/80 hover:bg-white/5"
+                      }`}
+                      style={{
+                        boxShadow: isActive ? '0 2px 12px rgba(245, 166, 35, 0.4)' : 'none',
+                      }}
+                    >
+                      {filter.isLive && (
+                        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                      )}
+                      <span>{filter.icon}</span>
+                      <span>{filter.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             {/* Neighbors Online - Below Filter Pills */}
             <div className="flex items-center justify-center gap-1.5 mt-2">

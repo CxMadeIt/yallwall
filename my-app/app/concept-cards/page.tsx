@@ -27,8 +27,8 @@ const COLORS = {
   navyDark: "#0A1520",
   navyText: "#0D1B2A",
   navyMuted: "#64748B",
-  teal: "#14B8A6",
-  tealLight: "#2DD4BF",
+  accent: "#64748B",
+  yellow: "#F5A623",
   white: "#FFFFFF",
   cream: "#FAF8F5",
   offWhite: "#F8F7F4",
@@ -293,7 +293,7 @@ function ProfileDrawer({ isOpen, onClose, user, onSignOut, router }: {
 
           <div className="flex items-center gap-4 mb-8">
             <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white notification-ring"
-              style={{ backgroundColor: COLORS.teal }}>
+              style={{ backgroundColor: COLORS.accent }}>
               {user?.display_name?.[0] || user?.username?.[0] || "U"}
             </div>
             <div>
@@ -556,7 +556,7 @@ function ThreadModal({
               <button 
                 onClick={() => setShowReplyInput(true)}
                 className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-all active:scale-[0.98] hover:opacity-90"
-                style={{ backgroundColor: COLORS.teal }}
+                style={{ backgroundColor: COLORS.accent }}
               >
                 Reply to this thread
               </button>
@@ -650,7 +650,7 @@ function ThreadModal({
                     }
                   }}
                   className="px-5 py-3 rounded-xl text-white font-semibold text-sm active:scale-95 transition-transform"
-                  style={{ backgroundColor: COLORS.teal }}
+                  style={{ backgroundColor: COLORS.accent }}
                 >
                   Reply
                 </button>
@@ -702,21 +702,21 @@ function GlassMessageCard({
           className="p-3.5 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden"
           onClick={onThread}
           style={{
-            background: '#FFFFFF',
+            background: '#FAF8F5',
             borderRadius: '18px',
             border: 'none',
             boxShadow: `
               0 4px 6px rgba(0, 0, 0, 0.07),
               0 10px 20px rgba(0, 0, 0, 0.12),
               0 20px 40px rgba(0, 0, 0, 0.08),
-              inset 0 0 0 2px ${COLORS.teal}30
+              inset 0 0 0 2px ${COLORS.accent}30
             `,
           }}
         >
           <div className="flex items-start gap-3">
             <div 
               className="w-11 h-11 rounded-xl flex items-center justify-center text-base font-bold text-white shrink-0"
-              style={{ backgroundColor: COLORS.teal }}
+              style={{ backgroundColor: COLORS.accent }}
             >
               {message.avatar}
             </div>
@@ -725,7 +725,7 @@ function GlassMessageCard({
                 <span className="font-bold" style={{ color: COLORS.navyText }}>{message.user}</span>
                 <span 
                   className="text-[10px] px-2 py-0.5 rounded-full font-medium border"
-                  style={{ color: COLORS.teal, backgroundColor: `${COLORS.teal}15`, borderColor: `${COLORS.teal}30` }}
+                  style={{ color: COLORS.accent, backgroundColor: `${COLORS.accent}15`, borderColor: `${COLORS.accent}30` }}
                 >
                   Sponsored
                 </span>
@@ -736,7 +736,7 @@ function GlassMessageCard({
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleTip(); }}
                   className="relative flex items-center gap-1.5 transition-colors"
-                  style={{ color: COLORS.teal }}
+                  style={{ color: COLORS.accent }}
                 >
                   <TipAnimation show={showTipAnim} onComplete={() => setShowTipAnim(false)} />
                   <span className="text-lg">🪙</span>
@@ -781,7 +781,7 @@ function GlassMessageCard({
       <div 
         className="relative p-3.5 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 group"
         style={{ 
-          background: '#FFFFFF',
+          background: '#FAF8F5',
           borderRadius: '18px',
           border: 'none',
           boxShadow: `
@@ -796,7 +796,7 @@ function GlassMessageCard({
         <div className="flex items-center gap-2.5 mb-2">
           <div 
             className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-            style={{ backgroundColor: COLORS.teal, border: 'none' }}
+            style={{ backgroundColor: COLORS.accent, border: 'none' }}
           >
             {message.avatar}
           </div>
@@ -838,7 +838,7 @@ function GlassMessageCard({
             <button 
               onClick={(e) => { e.stopPropagation(); handleTip(); }}
               className="relative flex items-center gap-1 transition-colors"
-              style={{ color: COLORS.teal }}
+              style={{ color: COLORS.accent }}
             >
               <TipAnimation show={showTipAnim} onComplete={() => setShowTipAnim(false)} />
               <span className="text-base">🪙</span>
@@ -1533,7 +1533,7 @@ export default function ConceptCardsPage() {
             >
               <div 
                 className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white transition-all ${unreadCount > 0 ? 'notification-ring' : ''}`}
-                style={{ backgroundColor: COLORS.teal }}
+                style={{ backgroundColor: COLORS.accent }}
               >
                 {user?.display_name?.[0] || user?.username?.[0] || "?"}
               </div>
@@ -1548,7 +1548,7 @@ export default function ConceptCardsPage() {
             <div className="absolute" style={{ right: 'calc(50% + 40px)' }}>
               <span className="font-bold text-xl tracking-tight whitespace-nowrap" style={{ fontFamily: "var(--font-jakarta)" }}>
                 <span className="text-white">Yall</span>
-                <span style={{ color: COLORS.teal }}>Wall</span>
+                <span style={{ color: COLORS.yellow }}>Wall</span>
               </span>
             </div>
 
@@ -1574,7 +1574,7 @@ export default function ConceptCardsPage() {
               <button className="p-2 rounded-full hover:bg-white/10 transition-colors relative active:scale-90">
                 <Bell className="w-5 h-5 text-white/80" />
                 {unreadCount > 0 && (
-                  <div className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ backgroundColor: COLORS.teal }} />
+                  <div className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ backgroundColor: COLORS.accent }} />
                 )}
               </button>
             </div>
@@ -1611,8 +1611,8 @@ export default function ConceptCardsPage() {
                           : "text-white/50 hover:text-white/80 hover:bg-white/5"
                       }`}
                       style={{
-                        backgroundColor: isActive ? COLORS.teal : undefined,
-                        boxShadow: isActive ? `0 2px 12px ${COLORS.teal}66` : 'none',
+                        backgroundColor: isActive ? COLORS.accent : undefined,
+                        boxShadow: isActive ? `0 2px 12px ${COLORS.accent}66` : 'none',
                       }}
                     >
                       {filter.isLive && (
@@ -1719,7 +1719,7 @@ export default function ConceptCardsPage() {
                 <button
                   type="submit"
                   className="px-5 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-95 hover:opacity-90"
-                  style={{ backgroundColor: COLORS.teal }}
+                  style={{ backgroundColor: COLORS.accent }}
                 >
                   Join
                 </button>
@@ -1771,7 +1771,7 @@ export default function ConceptCardsPage() {
                     <span className="text-xs text-white/40">{composeText.length}/280</span>
                     <button 
                       className="p-2.5 rounded-full transition-all hover:scale-105 active:scale-90 disabled:opacity-50"
-                      style={{ backgroundColor: COLORS.teal }}
+                      style={{ backgroundColor: COLORS.accent }}
                       onClick={handleCreatePost}
                       disabled={isLoading || !composeText.trim()}
                     >
@@ -1781,7 +1781,7 @@ export default function ConceptCardsPage() {
                 ) : (
                   <button 
                     className="p-2.5 rounded-full transition-all hover:scale-105 active:scale-90 disabled:opacity-50"
-                    style={{ backgroundColor: COLORS.teal }}
+                    style={{ backgroundColor: COLORS.accent }}
                     onClick={handleCreatePost}
                     disabled={isLoading || !composeText.trim()}
                   >
@@ -1823,7 +1823,7 @@ export default function ConceptCardsPage() {
                     <div 
                       className="w-11 h-11 rounded-full flex items-center justify-center transition-transform"
                       style={{ 
-                        backgroundColor: COLORS.teal,
+                        backgroundColor: COLORS.accent,
                         boxShadow: '0 4px 12px rgba(245, 166, 35, 0.4)',
                         transform: isActive ? 'scale(1.1)' : 'scale(1)',
                       }}
@@ -1835,13 +1835,13 @@ export default function ConceptCardsPage() {
                       <Icon 
                         className="w-6 h-6 transition-colors duration-200" 
                         style={{ 
-                          color: isActive ? COLORS.teal : 'rgba(255,255,255,0.5)',
+                          color: isActive ? COLORS.accent : 'rgba(255,255,255,0.5)',
                         }} 
                       />
                       <span 
                         className="text-[10px] transition-colors duration-200"
                         style={{ 
-                          color: isActive ? COLORS.teal : 'rgba(255,255,255,0.5)',
+                          color: isActive ? COLORS.accent : 'rgba(255,255,255,0.5)',
                         }}
                       >
                         {item.label}

@@ -1579,17 +1579,19 @@ export default function ConceptCardsPage() {
               />
             </div>
 
-            {/* Right: City + Neighbors + Menu - Symmetrical from center */}
-            <div className="absolute flex items-center gap-2" style={{ left: 'calc(50% + 40px)' }}>
-              <div className="flex flex-col items-start">
-                <h1 className="text-white font-bold text-sm tracking-tight whitespace-nowrap" style={{ fontFamily: "var(--font-jakarta)" }}>
-                  Cenla
-                </h1>
-                <div className="flex items-center gap-1">
-                  <div className="w-1 h-1 bg-green-400 rounded-full live-pulse" />
-                  <span className="text-[9px] text-white/50 whitespace-nowrap">247 neighbors</span>
-                </div>
+            {/* Right: City + Neighbors - Symmetrical from center */}
+            <div className="absolute flex flex-col items-start" style={{ left: 'calc(50% + 40px)' }}>
+              <h1 className="text-white font-bold text-sm tracking-tight whitespace-nowrap" style={{ fontFamily: "var(--font-jakarta)" }}>
+                Cenla
+              </h1>
+              <div className="flex items-center gap-1">
+                <div className="w-1 h-1 bg-green-400 rounded-full live-pulse" />
+                <span className="text-[9px] text-white/50 whitespace-nowrap">247 neighbors</span>
               </div>
+            </div>
+
+            {/* Far Right: Menu Button */}
+            <div className="absolute right-4">
               <button className="p-2 rounded-full hover:bg-white/10 transition-colors active:scale-90">
                 <Menu className="w-5 h-5 text-white/80" />
               </button>

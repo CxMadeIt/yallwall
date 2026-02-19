@@ -25,10 +25,12 @@ const inter = Inter({
 const COLORS = {
   navy: "#0D1B2A",
   navyDark: "#0A1520",
-  amber: "#F5A623",
-  amberLight: "#F7B84E",
-  brickRed: "#C0392B",
+  navyText: "#0D1B2A",
+  navyMuted: "#64748B",
+  teal: "#14B8A6",
+  tealLight: "#2DD4BF",
   white: "#FFFFFF",
+  cream: "#FAF8F5",
   offWhite: "#F8F7F4",
   gray: {
     100: "#F5F5F0",
@@ -291,7 +293,7 @@ function ProfileDrawer({ isOpen, onClose, user, onSignOut, router }: {
 
           <div className="flex items-center gap-4 mb-8">
             <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white notification-ring"
-              style={{ backgroundColor: COLORS.amber }}>
+              style={{ backgroundColor: COLORS.teal }}>
               {user?.display_name?.[0] || user?.username?.[0] || "U"}
             </div>
             <div>
@@ -554,7 +556,7 @@ function ThreadModal({
               <button 
                 onClick={() => setShowReplyInput(true)}
                 className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-all active:scale-[0.98] hover:opacity-90"
-                style={{ backgroundColor: COLORS.amber }}
+                style={{ backgroundColor: COLORS.teal }}
               >
                 Reply to this thread
               </button>
@@ -648,7 +650,7 @@ function ThreadModal({
                     }
                   }}
                   className="px-5 py-3 rounded-xl text-white font-semibold text-sm active:scale-95 transition-transform"
-                  style={{ backgroundColor: COLORS.amber }}
+                  style={{ backgroundColor: COLORS.teal }}
                 >
                   Reply
                 </button>
@@ -697,67 +699,66 @@ function GlassMessageCard({
     return (
       <div className="w-full animate-fade-in my-3" style={{ animationDelay: `${message.id * 50}ms` }}>
         <div 
-          className="p-3.5 cursor-pointer transition-all duration-200 active:scale-[0.98] relative overflow-hidden"
+          className="p-3.5 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden"
           onClick={onThread}
           style={{
-            background: 'linear-gradient(135deg, rgba(245, 166, 35, 0.18) 0%, rgba(245, 166, 35, 0.08) 100%)',
-            backdropFilter: 'blur(24px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-            border: '1px solid rgba(245, 166, 35, 0.4)',
-            borderRadius: '20px',
+            background: '#FFFFFF',
+            borderRadius: '18px',
+            border: 'none',
             boxShadow: `
-              0 8px 32px rgba(0, 0, 0, 0.3),
-              0 4px 16px rgba(245, 166, 35, 0.15),
-              inset 0 1px 0 rgba(255, 255, 255, 0.2),
-              inset 0 -1px 0 rgba(0, 0, 0, 0.1)
+              0 4px 6px rgba(0, 0, 0, 0.07),
+              0 10px 20px rgba(0, 0, 0, 0.12),
+              0 20px 40px rgba(0, 0, 0, 0.08),
+              inset 0 0 0 2px ${COLORS.teal}30
             `,
           }}
         >
-          {/* Top highlight for 3D effect */}
-          <div 
-            className="absolute inset-x-0 top-0 h-px rounded-t-[20px]"
-            style={{
-              background: 'linear-gradient(90deg, transparent, rgba(245, 166, 35, 0.6), transparent)',
-            }}
-          />
           <div className="flex items-start gap-3">
             <div 
               className="w-11 h-11 rounded-xl flex items-center justify-center text-base font-bold text-white shrink-0"
-              style={{ backgroundColor: COLORS.amber }}
+              style={{ backgroundColor: COLORS.teal }}
             >
               {message.avatar}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <span className="font-bold text-white">{message.user}</span>
-                <span className="text-[10px] text-amber-400 px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/30">Sponsored</span>
+                <span className="font-bold" style={{ color: COLORS.navyText }}>{message.user}</span>
+                <span 
+                  className="text-[10px] px-2 py-0.5 rounded-full font-medium border"
+                  style={{ color: COLORS.teal, backgroundColor: `${COLORS.teal}15`, borderColor: `${COLORS.teal}30` }}
+                >
+                  Sponsored
+                </span>
               </div>
-              <p className="text-white/90 text-sm leading-relaxed mb-3">{message.message}</p>
+              <p className="text-sm leading-relaxed mb-3" style={{ color: COLORS.navyText }}>{message.message}</p>
               
               <div className="flex items-center gap-3">
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleTip(); }}
-                  className="relative flex items-center gap-1.5 text-amber-400 hover:text-amber-300 transition-colors"
+                  className="relative flex items-center gap-1.5 transition-colors"
+                  style={{ color: COLORS.teal }}
                 >
                   <TipAnimation show={showTipAnim} onComplete={() => setShowTipAnim(false)} />
                   <span className="text-lg">🪙</span>
                   <span className="font-semibold text-sm">{message.tips}</span>
-                  <span className="text-xs text-white/50">tips</span>
+                  <span className="text-xs" style={{ color: COLORS.navyMuted }}>tips</span>
                 </button>
-                <span className="text-white/20">|</span>
+                <span style={{ color: COLORS.navyMuted }}>|</span>
                 <button 
                   onClick={(e) => { e.stopPropagation(); onThread(); }}
-                  className="flex items-center gap-1 text-xs text-white/50 hover:text-white/80 transition-colors"
+                  className="flex items-center gap-1 text-xs transition-colors"
+                  style={{ color: COLORS.navyMuted }}
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                   {message.replyCount || 0} replies
                 </button>
                 {isOwnPost && (
                   <>
-                    <span className="text-white/20">|</span>
+                    <span style={{ color: COLORS.navyMuted }}>|</span>
                     <button 
                       onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
-                      className="text-xs text-red-400/60 hover:text-red-400 transition-colors"
+                      className="text-xs hover:text-red-400 transition-colors"
+                      style={{ color: COLORS.navyMuted }}
                     >
                       Delete
                     </button>
@@ -776,66 +777,56 @@ function GlassMessageCard({
       className="w-full animate-fade-in my-2 relative"
       style={{ animationDelay: `${message.id * 50}ms` }}
     >
-      {/* Glass Card - 3D Liquid Glass Effect */}
+      {/* White Card - Premium 3D Effect */}
       <div 
-        className="relative p-3.5 cursor-pointer transition-all duration-200 active:scale-[0.98] group"
+        className="relative p-3.5 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 group"
         style={{ 
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%)',
-          backdropFilter: 'blur(24px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '20px',
+          background: '#FFFFFF',
+          borderRadius: '18px',
+          border: 'none',
           boxShadow: `
-            0 8px 32px rgba(0, 0, 0, 0.3),
-            0 2px 8px rgba(0, 0, 0, 0.2),
-            inset 0 1px 0 rgba(255, 255, 255, 0.15),
-            inset 0 -1px 0 rgba(0, 0, 0, 0.1)
+            0 4px 6px rgba(0, 0, 0, 0.07),
+            0 10px 20px rgba(0, 0, 0, 0.12),
+            0 20px 40px rgba(0, 0, 0, 0.08)
           `,
         }}
         onClick={onThread}
       >
-        {/* Top highlight for 3D effect */}
-        <div 
-          className="absolute inset-x-0 top-0 h-px rounded-t-[20px]"
-          style={{
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
-          }}
-        />
         {/* Header */}
         <div className="flex items-center gap-2.5 mb-2">
           <div 
             className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-            style={{ backgroundColor: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)' }}
+            style={{ backgroundColor: COLORS.teal, border: 'none' }}
           >
             {message.avatar}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm text-white truncate">{message.user}</span>
+              <span className="font-semibold text-sm truncate" style={{ color: COLORS.navyText }}>{message.user}</span>
               {message.isHot && (
-                <span className="text-[10px] bg-red-500/20 text-red-300 px-1.5 py-0.5 rounded-full font-bold border border-red-500/30">
+                <span className="text-[10px] bg-red-500/10 text-red-500 px-1.5 py-0.5 rounded-full font-bold border border-red-500/20">
                   🔥 Hot
                 </span>
               )}
               {message.isImportant && (
-                <span className="text-[10px] bg-red-500/30 text-red-200 px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5 border border-red-500/40">
+                <span className="text-[10px] bg-red-500/10 text-red-500 px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5 border border-red-500/20">
                   <AlertTriangle className="w-3 h-3" />
                   Alert
                 </span>
               )}
             </div>
           </div>
-          <span className="text-xs text-white/40 font-medium whitespace-nowrap">{message.time}</span>
+          <span className="text-xs font-medium whitespace-nowrap" style={{ color: COLORS.navyMuted }}>{message.time}</span>
         </div>
 
         {/* Message Content */}
-        <p className="text-sm leading-relaxed text-white/90 mb-2.5 pl-11.5">
+        <p className="text-sm leading-relaxed mb-2.5 pl-11.5" style={{ color: COLORS.navyText }}>
           {message.message}
         </p>
 
         {/* Location Tag */}
         {message.location && (
-          <div className="flex items-center gap-1 text-xs text-white/50 mb-2 pl-11.5">
+          <div className="flex items-center gap-1 text-xs mb-2 pl-11.5" style={{ color: COLORS.navyMuted }}>
             <MapPin className="w-3 h-3" />
             <span>{message.location}</span>
           </div>
@@ -846,7 +837,8 @@ function GlassMessageCard({
           <div className="flex items-center gap-4">
             <button 
               onClick={(e) => { e.stopPropagation(); handleTip(); }}
-              className="relative flex items-center gap-1 text-amber-400 hover:text-amber-300 transition-colors"
+              className="relative flex items-center gap-1 transition-colors"
+              style={{ color: COLORS.teal }}
             >
               <TipAnimation show={showTipAnim} onComplete={() => setShowTipAnim(false)} />
               <span className="text-base">🪙</span>
@@ -855,7 +847,8 @@ function GlassMessageCard({
             
             <button 
               onClick={(e) => { e.stopPropagation(); onLike?.(); }}
-              className={`flex items-center gap-1 transition-colors text-xs ${isLiked ? 'text-red-500' : 'text-white/40 hover:text-red-400'}`}
+              className={`flex items-center gap-1 transition-colors text-xs ${isLiked ? 'text-red-500' : ''}`}
+              style={!isLiked ? { color: COLORS.navyMuted } : undefined}
               disabled={!onLike}
             >
               <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-red-500' : ''}`} />
@@ -872,12 +865,13 @@ function GlassMessageCard({
                   onDelete?.();
                 }
               }}
-              className="text-[10px] text-white/30 hover:text-red-400 transition-colors"
+              className="text-[10px] hover:text-red-400 transition-colors"
+              style={{ color: COLORS.navyMuted }}
             >
               Delete
             </button>
           ) : (
-            <span className="text-[10px] text-white/30">23h left</span>
+            <span className="text-[10px]" style={{ color: COLORS.navyMuted }}>23h left</span>
           )}
         </div>
 
@@ -1539,7 +1533,7 @@ export default function ConceptCardsPage() {
             >
               <div 
                 className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white transition-all ${unreadCount > 0 ? 'notification-ring' : ''}`}
-                style={{ backgroundColor: COLORS.amber }}
+                style={{ backgroundColor: COLORS.teal }}
               >
                 {user?.display_name?.[0] || user?.username?.[0] || "?"}
               </div>
@@ -1554,7 +1548,7 @@ export default function ConceptCardsPage() {
             <div className="absolute" style={{ right: 'calc(50% + 40px)' }}>
               <span className="font-bold text-xl tracking-tight whitespace-nowrap" style={{ fontFamily: "var(--font-jakarta)" }}>
                 <span className="text-white">Yall</span>
-                <span style={{ color: COLORS.amber }}>Wall</span>
+                <span style={{ color: COLORS.teal }}>Wall</span>
               </span>
             </div>
 
@@ -1580,7 +1574,7 @@ export default function ConceptCardsPage() {
               <button className="p-2 rounded-full hover:bg-white/10 transition-colors relative active:scale-90">
                 <Bell className="w-5 h-5 text-white/80" />
                 {unreadCount > 0 && (
-                  <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-400 rounded-full" />
+                  <div className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ backgroundColor: COLORS.teal }} />
                 )}
               </button>
             </div>
@@ -1613,11 +1607,12 @@ export default function ConceptCardsPage() {
                       onClick={() => setActiveTab(filter.id)}
                       className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all active:scale-95 ${
                         isActive 
-                          ? "text-white bg-amber-500 shadow-lg" 
+                          ? "text-white shadow-lg" 
                           : "text-white/50 hover:text-white/80 hover:bg-white/5"
                       }`}
                       style={{
-                        boxShadow: isActive ? '0 2px 12px rgba(245, 166, 35, 0.4)' : 'none',
+                        backgroundColor: isActive ? COLORS.teal : undefined,
+                        boxShadow: isActive ? `0 2px 12px ${COLORS.teal}66` : 'none',
                       }}
                     >
                       {filter.isLive && (
@@ -1724,7 +1719,7 @@ export default function ConceptCardsPage() {
                 <button
                   type="submit"
                   className="px-5 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-95 hover:opacity-90"
-                  style={{ backgroundColor: COLORS.amber }}
+                  style={{ backgroundColor: COLORS.teal }}
                 >
                   Join
                 </button>
@@ -1776,7 +1771,7 @@ export default function ConceptCardsPage() {
                     <span className="text-xs text-white/40">{composeText.length}/280</span>
                     <button 
                       className="p-2.5 rounded-full transition-all hover:scale-105 active:scale-90 disabled:opacity-50"
-                      style={{ backgroundColor: COLORS.amber }}
+                      style={{ backgroundColor: COLORS.teal }}
                       onClick={handleCreatePost}
                       disabled={isLoading || !composeText.trim()}
                     >
@@ -1786,7 +1781,7 @@ export default function ConceptCardsPage() {
                 ) : (
                   <button 
                     className="p-2.5 rounded-full transition-all hover:scale-105 active:scale-90 disabled:opacity-50"
-                    style={{ backgroundColor: COLORS.amber }}
+                    style={{ backgroundColor: COLORS.teal }}
                     onClick={handleCreatePost}
                     disabled={isLoading || !composeText.trim()}
                   >
@@ -1828,7 +1823,7 @@ export default function ConceptCardsPage() {
                     <div 
                       className="w-11 h-11 rounded-full flex items-center justify-center transition-transform"
                       style={{ 
-                        backgroundColor: COLORS.amber,
+                        backgroundColor: COLORS.teal,
                         boxShadow: '0 4px 12px rgba(245, 166, 35, 0.4)',
                         transform: isActive ? 'scale(1.1)' : 'scale(1)',
                       }}
@@ -1840,13 +1835,13 @@ export default function ConceptCardsPage() {
                       <Icon 
                         className="w-6 h-6 transition-colors duration-200" 
                         style={{ 
-                          color: isActive ? COLORS.amber : 'rgba(255,255,255,0.5)',
+                          color: isActive ? COLORS.teal : 'rgba(255,255,255,0.5)',
                         }} 
                       />
                       <span 
                         className="text-[10px] transition-colors duration-200"
                         style={{ 
-                          color: isActive ? COLORS.amber : 'rgba(255,255,255,0.5)',
+                          color: isActive ? COLORS.teal : 'rgba(255,255,255,0.5)',
                         }}
                       >
                         {item.label}

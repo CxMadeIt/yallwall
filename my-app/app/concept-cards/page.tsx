@@ -1588,7 +1588,7 @@ export default function ConceptCardsPage() {
 
             {/* Right: City - Symmetrical from center */}
             <div className="absolute" style={{ left: 'calc(50% + 40px)' }}>
-              <h1 className="text-white font-bold text-base tracking-tight whitespace-nowrap" style={{ fontFamily: "var(--font-jakarta)" }}>
+              <h1 className="text-white font-bold text-xl tracking-tight whitespace-nowrap" style={{ fontFamily: "var(--font-jakarta)" }}>
                 Cenla
               </h1>
             </div>
@@ -1692,6 +1692,30 @@ export default function ConceptCardsPage() {
               <button className="text-xs text-white/30 hover:text-white/50 transition-colors">
                 Load more messages...
               </button>
+            </div>
+
+            {/* Email Signup - Stay in the loop */}
+            <div className="mx-4 mb-8 p-6 rounded-2xl" style={{ backgroundColor: 'rgba(245,166,35,0.08)', border: '1px solid rgba(245,166,35,0.2)' }}>
+              <div className="text-center mb-4">
+                <h3 className="text-white font-semibold text-lg mb-1">Don't Miss the Wall</h3>
+                <p className="text-white/50 text-sm">Get the juiciest local drama, events, and free tacos alerts. No spam, just vibes. 🌮</p>
+              </div>
+              <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); alert('Thanks for signing up! We\'ll keep you posted.'); }}>
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-amber-400/50"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="px-5 py-3 rounded-xl font-semibold text-sm text-white transition-all active:scale-95 hover:opacity-90"
+                  style={{ backgroundColor: COLORS.amber }}
+                >
+                  Join
+                </button>
+              </form>
+              <p className="text-center text-white/30 text-xs mt-3">We pinky promise not to ghost you... unless you're boring.</p>
             </div>
           </div>
         </main>

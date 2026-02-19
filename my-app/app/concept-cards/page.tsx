@@ -214,7 +214,30 @@ function ProfileDrawer({ isOpen, onClose, user, onSignOut, router }: {
   onSignOut: () => void;
   router: any;
 }) {
-  if (!isOpen) return null;
+  const [isClosing, setIsClosing] = useState(false);
+  const [shouldRender, setShouldRender] = useState(isOpen);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsClosing(false);
+      setShouldRender(true);
+    } else {
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 300); // Match animation duration
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  };
+
+  if (!shouldRender) return null;
 
   const menuItems = [
     { label: 'Edit Profile', path: '/profile/edit' },
@@ -225,31 +248,32 @@ function ProfileDrawer({ isOpen, onClose, user, onSignOut, router }: {
   ];
 
   const handleNavigate = (path: string) => {
-    onClose();
+    handleClose();
     setTimeout(() => {
       window.location.href = path;
-    }, 100);
+    }, 350);
   };
 
   return (
     <>
       <div 
-        className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm animate-fade-in"
-        onClick={onClose}
-        style={{ animationDuration: '0.25s' }}
+        className={`fixed inset-0 bg-black/40 z-50 backdrop-blur-sm transition-opacity duration-300 ${
+          isClosing ? 'opacity-0' : 'opacity-100'
+        }`}
+        onClick={handleClose}
       />
       <div 
-        className="fixed top-0 left-0 bottom-0 w-[300px] z-50 animate-slide-in-left"
+        className={`fixed top-0 left-0 bottom-0 w-[300px] z-50 transition-transform duration-300 ease-out ${
+          isClosing ? '-translate-x-full' : 'translate-x-0'
+        }`}
         style={{
           background: 'linear-gradient(180deg, rgba(13,27,42,0.98) 0%, rgba(10,21,32,0.98) 100%)',
           backdropFilter: 'blur(20px)',
-          animationDuration: '0.3s',
-          animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
         <div className="p-6">
           <button 
-            onClick={onClose} 
+            onClick={handleClose} 
             className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5 text-white/60" />

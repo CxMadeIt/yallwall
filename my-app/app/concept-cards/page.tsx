@@ -1561,9 +1561,9 @@ export default function ConceptCardsPage() {
               )}
             </button>
 
-            {/* Left: YallWall Logo Text */}
-            <div className="absolute left-14 flex items-center">
-              <span className="font-bold text-xl tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
+            {/* Left: YallWall Logo Text - Symmetrical from center */}
+            <div className="absolute" style={{ right: 'calc(50% + 40px)' }}>
+              <span className="font-bold text-xl tracking-tight whitespace-nowrap" style={{ fontFamily: "var(--font-jakarta)" }}>
                 <span className="text-white">Yall</span>
                 <span style={{ color: COLORS.amber }}>Wall</span>
               </span>
@@ -1579,28 +1579,20 @@ export default function ConceptCardsPage() {
               />
             </div>
 
-            {/* Right: City + Neighbors + Notifications */}
-            <div className="absolute right-4 flex items-center gap-3">
-              <div className="flex flex-col items-end">
-                <h1 className="text-white font-bold text-sm tracking-tight" style={{ fontFamily: "var(--font-jakarta)" }}>
+            {/* Right: City + Neighbors + Menu - Symmetrical from center */}
+            <div className="absolute flex items-center gap-2" style={{ left: 'calc(50% + 40px)' }}>
+              <div className="flex flex-col items-start">
+                <h1 className="text-white font-bold text-sm tracking-tight whitespace-nowrap" style={{ fontFamily: "var(--font-jakarta)" }}>
                   Cenla
                 </h1>
                 <div className="flex items-center gap-1">
                   <div className="w-1 h-1 bg-green-400 rounded-full live-pulse" />
-                  <span className="text-[9px] text-white/50">247 neighbors</span>
+                  <span className="text-[9px] text-white/50 whitespace-nowrap">247 neighbors</span>
                 </div>
               </div>
-              <div className="flex items-center gap-0.5">
-                <button className="p-2 rounded-full hover:bg-white/10 transition-colors relative active:scale-90">
-                  <Bell className="w-5 h-5 text-white/80" />
-                  {unreadCount > 0 && (
-                    <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-400 rounded-full" />
-                  )}
-                </button>
-                <button className="p-2 rounded-full hover:bg-white/10 transition-colors active:scale-90">
-                  <Menu className="w-5 h-5 text-white/80" />
-                </button>
-              </div>
+              <button className="p-2 rounded-full hover:bg-white/10 transition-colors active:scale-90">
+                <Menu className="w-5 h-5 text-white/80" />
+              </button>
             </div>
           </div>
         </header>

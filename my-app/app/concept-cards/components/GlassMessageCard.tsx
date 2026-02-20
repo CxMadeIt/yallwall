@@ -3,6 +3,7 @@ import { MapPin, MessageSquare, Heart } from "lucide-react";
 import { COLORS } from "../utils";
 import { MessageDisplay } from "../types";
 import { TipAnimation } from "./TipAnimation";
+import { useHaptics } from "../hooks/useHaptics";
 
 interface GlassMessageCardProps {
   message: MessageDisplay;
@@ -24,12 +25,21 @@ export const GlassMessageCard = memo(function GlassMessageCard({
   currentUserId,
 }: GlassMessageCardProps) {
   const [showTipAnim, setShowTipAnim] = useState(false);
+  const { light, success } = useHaptics();
   const isOwnPost = currentUserId && message.user_id === currentUserId;
 
   const handleTip = () => {
     setShowTipAnim(true);
+    success();
     onTip();
   };
+
+  const handleLike = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    light();
+    onLike?.();
+  };
+
 
   if (message.isBusiness) {
     return (
@@ -164,6 +174,20 @@ export const GlassMessageCard = memo(function GlassMessageCard({
           {message.message}
         </p>
 
+        {/* Message Image */}
+        {message.image_url && (
+          <div className="mb-3 pl-11.5">
+            <div className="rounded-xl overflow-hidden relative bg-black/10 min-h-[200px]">
+              <img 
+                src={message.image_url} 
+                alt="Message attachment" 
+                className="w-full h-auto object-cover max-h-[400px]"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Location Tag */}
         {message.location && (
           <div className="flex items-center gap-1 text-xs mb-2 pl-11.5" style={{ color: COLORS.navyMuted }}>
@@ -186,7 +210,7 @@ export const GlassMessageCard = memo(function GlassMessageCard({
             </button>
             
             <button 
-              onClick={(e) => { e.stopPropagation(); onLike?.(); }}
+              onClick={handleLike}
               className={`flex items-center gap-1 transition-colors text-xs ${isLiked ? 'text-red-500' : ''}`}
               style={!isLiked ? { color: COLORS.navyMuted } : undefined}
               disabled={!onLike}

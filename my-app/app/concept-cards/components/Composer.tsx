@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
-import { MapPin, Send, AlertTriangle, Gift } from "lucide-react";
+import { MapPin, Send, AlertTriangle, Gift, Image as ImageIcon, X, Loader2 } from "lucide-react";
 import { COLORS } from "../utils";
+import { useImageUpload } from "../hooks/useImageUpload";
 
 interface ComposerProps {
-  onPost: (text: string, manualFlag: 'alert' | 'business' | null) => Promise<void>;
+  onPost: (text: string, manualFlag: 'alert' | 'business' | null, imageUrl?: string | null) => Promise<void>;
   isLoading: boolean;
   showInput: boolean;
   isModalOpen: boolean;
@@ -22,14 +23,33 @@ export function Composer({
   const [composeText, setComposeText] = useState("");
   const [isComposing, setIsComposing] = useState(false);
   const [manualFlag, setManualFlag] = useState<'alert' | 'business' | null>(null);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { uploadImage, isUploading } = useImageUpload();
 
   const handleCreatePost = async () => {
-    if (!composeText.trim()) return;
-    await onPost(composeText, manualFlag);
+    if ((!composeText.trim() && !uploadedUrl) || isUploading) return;
+    
+    await onPost(composeText, manualFlag, uploadedUrl);
+    
+    // Reset state
     setComposeText("");
     setManualFlag(null);
+    setUploadedUrl(null);
     setIsComposing(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const url = await uploadImage(file);
+      if (url) {
+        setUploadedUrl(url);
+      }
+    }
   };
 
   return (
@@ -45,19 +65,53 @@ export function Composer({
     >
       <div className="max-w-xl mx-auto animate-input-expand">
         <div 
-          className="p-1.5 rounded-2xl"
+          className="p-1.5 rounded-2xl transition-all duration-300"
           style={{ 
             backgroundColor: COLORS.navyDark,
             border: '1px solid rgba(255,255,255,0.1)',
             boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
           }}
         >
+          {/* Image Preview Area */}
+          {(uploadedUrl || isUploading) && (
+            <div className="relative mx-2 mt-2 mb-2 rounded-xl overflow-hidden bg-black/20" style={{ maxHeight: '200px' }}>
+              {isUploading ? (
+                <div className="flex items-center justify-center h-32 w-full">
+                  <Loader2 className="w-8 h-8 text-white/50 animate-spin" />
+                </div>
+              ) : (
+                <div className="relative">
+                  <img src={uploadedUrl!} alt="Preview" className="w-full h-full object-cover rounded-xl" />
+                  <button 
+                    onClick={() => {
+                      setUploadedUrl(null);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                    className="absolute top-2 right-2 p-1 bg-black/50 rounded-full hover:bg-black/70 text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex items-center gap-2">
+            {/* Image Upload Button */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              accept="image/*"
+              className="hidden"
+            />
             <button 
+              onClick={() => fileInputRef.current?.click()}
               className="p-2.5 rounded-full hover:bg-white/10 transition-colors active:scale-90"
-              style={{ color: COLORS.cream }}
+              style={{ color: uploadedUrl ? COLORS.yellow : COLORS.cream }}
+              disabled={isUploading}
             >
-              <MapPin className="w-5 h-5" />
+              <ImageIcon className="w-5 h-5" />
             </button>
             
             <div className="flex-1 relative">
@@ -75,7 +129,7 @@ export function Composer({
                   onBlur?.();
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && composeText.trim() && !isLoading) {
+                  if (e.key === 'Enter' && (composeText.trim() || uploadedUrl) && !isLoading && !isUploading) {
                     e.preventDefault();
                     handleCreatePost();
                   }
@@ -88,30 +142,22 @@ export function Composer({
               />
             </div>
             
-            {isComposing || composeText.length > 0 ? (
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              {(isComposing || composeText.length > 0) && (
                 <span className="text-xs" style={{ color: 'rgba(250,248,245,0.5)' }}>{composeText.length}/280</span>
-                <button 
-                  className="p-2.5 rounded-full transition-all hover:scale-105 active:scale-90 disabled:opacity-50"
-                  style={{ backgroundColor: COLORS.yellow }}
-                  onClick={handleCreatePost}
-                  disabled={isLoading || !composeText.trim()}
-                >
-                  <Send className="w-4 h-4 text-white" />
-                </button>
-              </div>
-            ) : (
+              )}
               <button 
-                className="p-2.5 rounded-full transition-all hover:scale-105 active:scale-90 disabled:opacity-50"
-                style={{ backgroundColor: COLORS.yellow }}
+                className="p-2.5 rounded-full transition-all hover:scale-105 active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: (composeText.trim() || uploadedUrl) ? COLORS.yellow : 'rgba(255,255,255,0.1)' }}
                 onClick={handleCreatePost}
-                disabled={isLoading || !composeText.trim()}
+                disabled={isLoading || isUploading || (!composeText.trim() && !uploadedUrl)}
               >
-                <Send className="w-4 h-4 text-white" />
+                {isLoading ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Send className="w-4 h-4 text-white" />}
               </button>
-            )}
+            </div>
           </div>
         </div>
+        
         {/* Manual Flag Buttons */}
         <div className="flex gap-2 mt-2 px-1">
           <button

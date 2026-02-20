@@ -21,6 +21,7 @@ export interface MessageDisplay {
   likes: number;
   tips: number;
   location?: string;
+  image_url?: string | null;
   isHot?: boolean;
   isImportant?: boolean;
   category: string;

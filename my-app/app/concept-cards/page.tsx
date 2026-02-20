@@ -16,6 +16,8 @@ import { ProfileDrawer } from "./components/ProfileDrawer";
 import { TipModal } from "./components/TipModal";
 import { QRCodeModal } from "./components/QRCodeModal";
 import { Toast } from "./components/Toast";
+import { LoadingSkeleton } from "./components/LoadingSkeleton";
+import { EmptyState } from "./components/EmptyState";
 import OnboardingModal from "./OnboardingModal"; // Keeping original relative import if it exists
 
 import { useAuth } from "./hooks/useAuth";
@@ -104,7 +106,7 @@ export default function ConceptCardsPage() {
     setSelectedThread(null);
   }, [selectedThread, supabase, updateMessage]);
 
-  const handleCreatePost = async (text: string, manualFlag: 'alert' | 'business' | null) => {
+  const handleCreatePost = async (text: string, manualFlag: 'alert' | 'business' | null, imageUrl?: string | null) => {
     if (!isAuthenticated || !user?.id) {
       router.push('/login');
       return;
@@ -127,6 +129,7 @@ export default function ConceptCardsPage() {
         is_alert: category === 'alerts',
         is_business_post: category === 'deals',
         manual_flag: manualFlag,
+        image_url: imageUrl || null,
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       } as any)
       .select();
@@ -276,19 +279,11 @@ export default function ConceptCardsPage() {
           <div className="max-w-xl mx-auto px-4 py-2">
             <div className="space-y-1">
               {messagesLoading ? (
-                <div className="text-center py-12">
-                  <div className="w-8 h-8 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin mx-auto mb-4" />
-                  <p className="text-white/40 text-sm">Loading messages...</p>
+                <div className="py-4">
+                  <LoadingSkeleton count={3} />
                 </div>
               ) : filteredMessages.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-white/40 text-sm">
-                    {activeTab === 'hot' && "Nothing hot right now. Be the first to tip!"}
-                    {activeTab === 'alerts' && "No alerts. All clear! ✅"}
-                    {activeTab === 'deals' && "No local deals right now. Check back later!"}
-                    {activeTab === 'live' && "No messages yet. Be the first!"}
-                  </p>
-                </div>
+                <EmptyState activeTab={activeTab} onCreatePost={() => setShowInput(true)} />
               ) : (
                 filteredMessages.map((msg) => (
                   <GlassMessageCard 
